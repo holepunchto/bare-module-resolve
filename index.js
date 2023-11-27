@@ -6,6 +6,14 @@ module.exports = exports = function * resolve (specifier, parentURL, opts, readP
     opts = {}
   }
 
+  if (!opts) opts = {}
+
+  const {
+    imports = null
+  } = opts
+
+  if (imports) yield * exports.packageImportsExports(specifier, imports, parentURL, opts, readPackage)
+
   yield * exports.packageImports(specifier, parentURL, opts, readPackage)
 
   if (specifier === '.' || specifier[0] === '/' || specifier.startsWith('./') || specifier.startsWith('../')) {
@@ -26,7 +34,6 @@ exports.package = function * (packageSpecifier, parentURL, opts, readPackage) {
   if (packageSpecifier === '') {
     throw errors.INVALID_MODULE_SPECIFIER()
   }
-
 
   if (builtins.includes(packageSpecifier)) return yield new URL('builtin:' + packageSpecifier)
 
