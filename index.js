@@ -8,7 +8,7 @@ module.exports = exports = function * resolve (specifier, parentURL, opts, readP
 
   yield * exports.packageImports(specifier, parentURL, opts, readPackage)
 
-  if (specifier[0] === '/' || specifier.startsWith('./') || specifier.startsWith('../')) {
+  if (specifier === '.' || specifier[0] === '/' || specifier.startsWith('./') || specifier.startsWith('../')) {
     yield * exports.file(specifier, parentURL, true, opts)
     yield * exports.directory(specifier, parentURL, opts, readPackage)
   } else {
@@ -27,7 +27,8 @@ exports.package = function * (packageSpecifier, parentURL, opts, readPackage) {
     throw errors.INVALID_MODULE_SPECIFIER()
   }
 
-  if (builtins.includes(packageSpecifier)) return yield packageSpecifier
+
+  if (builtins.includes(packageSpecifier)) return yield new URL('builtin:' + packageSpecifier)
 
   if (packageSpecifier[0] !== '@') {
     packageName = packageSpecifier.split('/', 1).join()
@@ -95,32 +96,32 @@ exports.packageSelf = function * (packageName, packageSubpath, parentURL, opts, 
   }
 }
 
-exports.packageExports = function * (packageURL, subpath, exports, opts, readPackage) {
+exports.packageExports = function * (packageURL, subpath, packageExports, opts, readPackage) {
   if (subpath === '.') {
     let mainExport
 
-    if (typeof exports === 'string' || Array.isArray(exports)) {
-      mainExport = exports
-    } else if (typeof exports === 'object') {
-      const keys = Object.keys(exports)
+    if (typeof packageExports === 'string' || Array.isArray(packageExports)) {
+      mainExport = packageExports
+    } else if (typeof packageExports === 'object') {
+      const keys = Object.keys(packageExports)
 
       if (keys.some(key => key.startsWith('.'))) {
-        if ('.' in exports) mainExport = exports['.']
+        if ('.' in packageExports) mainExport = packageExports['.']
       } else {
-        mainExport = exports
+        mainExport = packageExports
       }
     }
 
     if (mainExport) {
       yield * exports.packageTarget(packageURL, mainExport, null, opts, readPackage)
     }
-  } else if (typeof exports === 'object') {
-    const keys = Object.keys(exports)
+  } else if (typeof packageExports === 'object') {
+    const keys = Object.keys(packageExports)
 
     if (keys.every(key => key.startsWith('.'))) {
       const matchKey = './' + subpath
 
-      yield * exports.packageImportsExports(matchKey, exports, packageURL, opts, readPackage)
+      yield * exports.packageImportsExports(matchKey, packageExports, packageURL, opts, readPackage)
     }
   }
 }
@@ -183,7 +184,7 @@ exports.packageTarget = function * (packageURL, target, patternMatch, opts, read
       yield * exports.packageTarget(packageURL, targetValue, patternMatch, opts, readPackage)
     }
   } else if (target) {
-    for (const p of target) {
+    for (const p in target) {
       if (p === 'default' || conditions.includes(p)) {
         const targetValue = target[p]
 
@@ -228,7 +229,7 @@ exports.directory = function * (dirname, parentURL, opts, readPackage) {
 
   if (pkg) {
     if (pkg.exports) {
-      return yield * exports.packageExports(new URL(dirname, parentURL), '.', pkg.exports, opts, readPackage)
+      return yield * exports.packageExports(new URL(dirname + '/', parentURL), '.', pkg.exports, opts, readPackage)
     }
 
     if (typeof pkg.main === 'string') {

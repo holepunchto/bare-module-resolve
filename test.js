@@ -97,6 +97,27 @@ test('bare specifier with packge.json#imports', (t) => {
   )
 })
 
+test('bare specifier with packge.json#imports, map to builtin', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        imports: {
+          f: 'foo'
+        }
+      }
+    }
+
+    return null
+  }
+
+  t.alike(
+    expand(resolve('f', url('file:///a/b/node_modules/d/e.js'), { extensions: ['.js'], builtins: ['foo'] }, readPackage)),
+    [
+      'builtin:foo'
+    ]
+  )
+})
+
 test('relative specifier', (t) => {
   t.alike(
     expand(resolve('./d', url('file:///a/b/c'), { extensions: ['.js'] }, noPackage)),
@@ -124,6 +145,27 @@ test('relative specifier with scoped package.json#main', (t) => {
     if (url.href === 'file:///a/b/d/package.json') {
       return {
         main: 'e.js'
+      }
+    }
+
+    return null
+  }
+
+  t.alike(
+    expand(resolve('./d', url('file:///a/b/c'), { extensions: ['.js'] }, readPackage)),
+    [
+      'file:///a/b/d',
+      'file:///a/b/d.js',
+      'file:///a/b/d/e.js'
+    ]
+  )
+})
+
+test('relative specifier with scoped package.json#exports', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/d/package.json') {
+      return {
+        exports: './e.js'
       }
     }
 
