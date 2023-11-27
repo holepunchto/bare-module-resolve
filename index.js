@@ -54,7 +54,7 @@ exports.package = function * (packageSpecifier, parentURL, opts, readPackage) {
 
   parentURL = new URL(parentURL.href)
 
-  while (parentURL.pathname !== '/') {
+  do {
     const packageURL = new URL('node_modules/' + packageName + '/', parentURL)
 
     parentURL.pathname = parentURL.pathname.substring(0, parentURL.pathname.lastIndexOf('/'))
@@ -79,7 +79,7 @@ exports.package = function * (packageSpecifier, parentURL, opts, readPackage) {
 
       return
     }
-  }
+  } while (parentURL.pathname !== '/')
 }
 
 exports.packageSelf = function * (packageName, packageSubpath, parentURL, opts, readPackage) {
@@ -162,23 +162,15 @@ exports.packageTarget = function * (packageURL, target, patternMatch, opts, read
   } = opts
 
   if (typeof target === 'string') {
-    if (!target.startsWith('./')) {
-      if (target[0] === '/' || target.startsWith('../')) {
-        throw errors.INVALID_PACKAGE_TARGET()
-      }
-
-      if (patternMatch !== null) {
-        target = target.replaceAll('*', patternMatch)
-      }
-
-      return yield * exports.package(target, packageURL, opts, readPackage)
-    }
-
     if (patternMatch !== null) {
       target = target.replaceAll('*', patternMatch)
     }
 
-    yield new URL(target, packageURL)
+    if (target === '.' || target[0] === '/' || target.startsWith('./') || target.startsWith('../')) {
+      yield new URL(target, packageURL)
+    } else {
+      yield * exports.package(target, packageURL, opts, readPackage)
+    }
   } else if (Array.isArray(target)) {
     for (const targetValue of target) {
       yield * exports.packageTarget(packageURL, targetValue, patternMatch, opts, readPackage)
@@ -197,13 +189,13 @@ exports.packageTarget = function * (packageURL, target, patternMatch, opts, read
 exports.lookupPackageScope = function * (url) {
   const scopeURL = new URL(url.href)
 
-  while (scopeURL.pathname !== '/') {
+  do {
     yield new URL('package.json', scopeURL)
 
     scopeURL.pathname = scopeURL.pathname.substring(0, scopeURL.pathname.lastIndexOf('/'))
 
     if (scopeURL.pathname.endsWith('/node_modules')) break
-  }
+  } while (scopeURL.pathname !== '/')
 }
 
 exports.file = function * (filename, parentURL, allowBare, opts) {
@@ -225,17 +217,19 @@ exports.file = function * (filename, parentURL, allowBare, opts) {
 }
 
 exports.directory = function * (dirname, parentURL, opts, readPackage) {
-  const pkg = readPackage(new URL(dirname + '/package.json', parentURL))
+  parentURL = new URL(dirname === '/' ? dirname : dirname + '/', parentURL)
+
+  const pkg = readPackage(new URL('package.json', parentURL))
 
   if (pkg) {
     if (pkg.exports) {
-      return yield * exports.packageExports(new URL(dirname + '/', parentURL), '.', pkg.exports, opts, readPackage)
+      return yield * exports.packageExports(parentURL, '.', pkg.exports, opts, readPackage)
     }
 
     if (typeof pkg.main === 'string') {
-      return yield new URL(dirname + '/' + pkg.main, parentURL)
+      return yield new URL(pkg.main, parentURL)
     }
   }
 
-  yield * exports.file(dirname + '/index', parentURL, false, opts)
+  yield * exports.file('index', parentURL, false, opts)
 }
