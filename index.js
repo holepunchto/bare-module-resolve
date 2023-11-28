@@ -149,7 +149,7 @@ exports.package = function * (packageSpecifier, parentURL, opts) {
       }
 
       if (packageSubpath === '.') {
-        if (typeof info.main === 'string') {
+        if (typeof info.main === 'string' && info.main) {
           packageSubpath = info.main
         } else {
           return yield * exports.file('index', packageURL, false, opts)
@@ -162,7 +162,15 @@ exports.package = function * (packageSpecifier, parentURL, opts) {
         yielded = true
       }
 
-      if (yield * exports.file(packageSubpath + '/index', packageURL, false, opts)) {
+      let packageIndex
+
+      if (packageSubpath[packageSubpath.length - 1] === '/') {
+        packageIndex = packageSubpath + 'index'
+      } else {
+        packageIndex = packageSubpath + '/index'
+      }
+
+      if (yield * exports.file(packageIndex, packageURL, false, opts)) {
         yielded = true
       }
 
@@ -371,7 +379,7 @@ exports.file = function * (filename, parentURL, allowBare, opts) {
 }
 
 exports.directory = function * (dirname, parentURL, opts) {
-  parentURL = new URL(dirname === '/' ? dirname : dirname + '/', parentURL)
+  parentURL = new URL(dirname[dirname.length - 1] === '/' ? dirname : dirname + '/', parentURL)
 
   const info = yield pkg(new URL('package.json', parentURL))
 
@@ -380,7 +388,7 @@ exports.directory = function * (dirname, parentURL, opts) {
       return yield * exports.packageExports(parentURL, '.', info.exports, opts)
     }
 
-    if (typeof info.main === 'string') {
+    if (typeof info.main === 'string' && info.main) {
       let yielded = false
 
       if (yield * exports.file(info.main, parentURL, true, opts)) {

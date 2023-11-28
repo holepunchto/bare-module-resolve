@@ -87,6 +87,26 @@ test('bare specifier with package.json#main', (t) => {
   ])
 })
 
+test('bare specifier with empty package.json#main', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        main: ''
+      }
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/index.js'])
+})
+
 test('bare specifier with packge.json#imports', (t) => {
   function readPackage (url) {
     if (url.href === 'file:///a/b/node_modules/d/package.json') {
