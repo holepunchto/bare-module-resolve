@@ -67,7 +67,7 @@ test('bare specifier with package.json#main', (t) => {
   function readPackage (url) {
     if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {
-        main: 'e.js'
+        main: 'e'
       }
     }
 
@@ -80,7 +80,11 @@ test('bare specifier with package.json#main', (t) => {
     result.push(resolution.href)
   }
 
-  t.alike(result, ['file:///a/b/node_modules/d/e.js'])
+  t.alike(result, [
+    'file:///a/b/node_modules/d/e',
+    'file:///a/b/node_modules/d/e.js',
+    'file:///a/b/node_modules/d/e/index.js'
+  ])
 })
 
 test('bare specifier with packge.json#imports', (t) => {
@@ -124,9 +128,7 @@ test('bare specifier with packge.json#imports, map to builtin', (t) => {
     result.push(resolution.href)
   }
 
-  t.alike(result, [
-    'builtin:foo'
-  ])
+  t.alike(result, ['builtin:foo'])
 })
 
 test('relative specifier', (t) => {
@@ -181,7 +183,7 @@ test('relative specifier with scoped package.json#main', (t) => {
   function readPackage (url) {
     if (url.href === 'file:///a/b/d/package.json') {
       return {
-        main: 'e.js'
+        main: 'e'
       }
     }
 
@@ -197,7 +199,9 @@ test('relative specifier with scoped package.json#main', (t) => {
   t.alike(result, [
     'file:///a/b/d',
     'file:///a/b/d.js',
-    'file:///a/b/d/e.js'
+    'file:///a/b/d/e',
+    'file:///a/b/d/e.js',
+    'file:///a/b/d/e/index.js'
   ])
 })
 

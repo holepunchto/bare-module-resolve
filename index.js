@@ -124,7 +124,7 @@ exports.package = function * (packageSpecifier, parentURL, opts) {
     throw errors.INVALID_MODULE_SPECIFIER()
   }
 
-  const packageSubpath = '.' + packageSpecifier.substring(packageName.length)
+  let packageSubpath = '.' + packageSpecifier.substring(packageName.length)
 
   if (packageSubpath[packageSubpath.length - 1] === '/') {
     throw errors.INVALID_MODULE_SPECIFIER()
@@ -150,12 +150,10 @@ exports.package = function * (packageSpecifier, parentURL, opts) {
 
       if (packageSubpath === '.') {
         if (typeof info.main === 'string') {
-          yield mod(new URL(info.main, packageURL))
-
-          return true
+          packageSubpath = info.main
+        } else {
+          return yield * exports.file('index', packageURL, false, opts)
         }
-
-        return yield * exports.file('index', packageURL, false, opts)
       }
 
       let yielded = false
@@ -164,7 +162,7 @@ exports.package = function * (packageSpecifier, parentURL, opts) {
         yielded = true
       }
 
-      if (yield * exports.directory(packageSubpath, packageURL, opts)) {
+      if (yield * exports.file(packageSubpath + '/index', packageURL, false, opts)) {
         yielded = true
       }
 
@@ -383,9 +381,17 @@ exports.directory = function * (dirname, parentURL, opts) {
     }
 
     if (typeof info.main === 'string') {
-      yield mod(new URL(info.main, parentURL))
+      let yielded = false
 
-      return true
+      if (yield * exports.file(info.main, parentURL, true, opts)) {
+        yielded = true
+      }
+
+      if (yield * exports.directory(info.main, parentURL, opts)) {
+        yielded = true
+      }
+
+      return yielded
     }
   }
 
