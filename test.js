@@ -380,6 +380,26 @@ test('package.json#imports with private expansion key', (t) => {
   )
 })
 
+test('async package reads', async (t) => {
+  async function readPackage (url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {}
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for await (const resolution of resolve('d', url('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [
+    'file:///a/b/node_modules/d/index.js'
+  ])
+})
+
 function noPackage () {
   return null
 }

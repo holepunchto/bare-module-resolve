@@ -1,7 +1,6 @@
-/* eslint-disable no-unreachable-loop */
 const errors = require('./lib/errors')
 
-module.exports = exports = function * resolve (specifier, parentURL, opts, readPackage) {
+module.exports = exports = function resolve (specifier, parentURL, opts, readPackage) {
   if (typeof opts === 'function') {
     readPackage = opts
     opts = {}
@@ -9,42 +8,91 @@ module.exports = exports = function * resolve (specifier, parentURL, opts, readP
 
   if (!opts) opts = {}
 
-  for (const resolved of exports.module(specifier, parentURL, opts, readPackage)) {
-    if (resolved.protocol === 'file:' && /%2f|%5c/i.test(resolved.href)) {
-      throw errors.INVALID_MODULE_SPECIFIER()
-    }
+  return {
+    * [Symbol.iterator] () {
+      const generator = exports.module(specifier, parentURL, opts)
 
-    yield resolved
+      let next = generator.next()
+
+      while (next.done !== true) {
+        const value = next.value
+
+        if (value.package) {
+          next = generator.next(readPackage(value.package))
+        } else {
+          yield value.module
+          next = generator.next()
+        }
+      }
+    },
+
+    async * [Symbol.asyncIterator] () {
+      const generator = exports.module(specifier, parentURL, opts)
+
+      let next = generator.next()
+
+      while (next.done !== true) {
+        const value = next.value
+
+        if (value.package) {
+          next = generator.next(await readPackage(value.package))
+        } else {
+          yield value.module
+          next = generator.next()
+        }
+      }
+    }
   }
 }
 
-exports.module = function * (specifier, parentURL, opts, readPackage) {
-  const {
-    imports = null
-  } = opts
+function mod (moduleURL) {
+  if (moduleURL.protocol === 'file:' && /%2f|%5c/i.test(moduleURL.href)) {
+    throw errors.INVALID_MODULE_SPECIFIER()
+  }
+
+  return {
+    module: moduleURL
+  }
+}
+
+function pkg (packageURL) {
+  return {
+    package: packageURL
+  }
+}
+
+exports.module = function * (specifier, parentURL, opts) {
+  const { imports = null } = opts
 
   if (imports) {
-    for (const resolved of exports.packageImportsExports(specifier, imports, parentURL, true, opts, readPackage)) {
-      return yield resolved
+    if (yield * exports.packageImportsExports(specifier, imports, parentURL, true, opts)) {
+      return true
     }
   }
 
-  for (const resolved of exports.packageImports(specifier, parentURL, opts, readPackage)) {
-    return yield resolved
+  if (yield * exports.packageImports(specifier, parentURL, opts)) {
+    return true
   }
 
   if (specifier === '.' || specifier[0] === '/' || specifier.startsWith('./') || specifier.startsWith('../')) {
-    yield * exports.file(specifier, parentURL, true, opts)
-    yield * exports.directory(specifier, parentURL, opts, readPackage)
-  } else {
-    yield * exports.package(specifier, parentURL, opts, readPackage)
+    let yielded = false
+
+    if (yield * exports.file(specifier, parentURL, true, opts)) {
+      yielded = true
+    }
+
+    if (yield * exports.directory(specifier, parentURL, opts)) {
+      yielded = true
+    }
+
+    return yielded
   }
+
+  return yield * exports.package(specifier, parentURL, opts)
 }
 
-exports.package = function * (packageSpecifier, parentURL, opts, readPackage) {
-  const {
-    builtins = []
-  } = opts
+exports.package = function * (packageSpecifier, parentURL, opts) {
+  const { builtins = [] } = opts
 
   let packageName
 
@@ -52,7 +100,11 @@ exports.package = function * (packageSpecifier, parentURL, opts, readPackage) {
     throw errors.INVALID_MODULE_SPECIFIER()
   }
 
-  if (builtins.includes(packageSpecifier)) return yield new URL('builtin:' + packageSpecifier)
+  if (builtins.includes(packageSpecifier)) {
+    yield mod(new URL('builtin:' + packageSpecifier))
+
+    return true
+  }
 
   if (packageSpecifier[0] !== '@') {
     packageName = packageSpecifier.split('/', 1).join()
@@ -74,7 +126,9 @@ exports.package = function * (packageSpecifier, parentURL, opts, readPackage) {
     throw errors.INVALID_MODULE_SPECIFIER()
   }
 
-  yield * exports.packageSelf(packageName, packageSubpath, parentURL, opts, readPackage)
+  if (yield * exports.packageSelf(packageName, packageSubpath, parentURL, opts)) {
+    return true
+  }
 
   parentURL = new URL(parentURL.href)
 
@@ -83,44 +137,57 @@ exports.package = function * (packageSpecifier, parentURL, opts, readPackage) {
 
     parentURL.pathname = parentURL.pathname.substring(0, parentURL.pathname.lastIndexOf('/'))
 
-    const pkg = readPackage(new URL('package.json', packageURL))
+    const info = yield pkg(new URL('package.json', packageURL))
 
-    if (pkg) {
-      if (pkg.exports) {
-        return yield * exports.packageExports(packageURL, packageSubpath, pkg.exports, opts, readPackage)
+    if (info) {
+      if (info.exports) {
+        return yield * exports.packageExports(packageURL, packageSubpath, info.exports, opts)
       }
 
       if (packageSubpath === '.') {
-        if (typeof pkg.main === 'string') {
-          return yield new URL(pkg.main, packageURL)
-        } else {
-          return yield * exports.file('index', packageURL, false, opts)
+        if (typeof info.main === 'string') {
+          yield mod(new URL(info.main, packageURL))
+
+          return true
         }
+
+        return yield * exports.file('index', packageURL, false, opts)
       }
 
-      yield * exports.file(packageSubpath, packageURL, true, opts)
-      yield * exports.directory(packageSubpath, packageURL, opts, readPackage)
+      let yielded = false
 
-      return
+      if (yield * exports.file(packageSubpath, packageURL, true, opts)) {
+        yielded = true
+      }
+
+      if (yield * exports.directory(packageSubpath, packageURL, opts)) {
+        yielded = true
+      }
+
+      return yielded
     }
   } while (parentURL.pathname !== '/')
+
+  return false
 }
 
-exports.packageSelf = function * (packageName, packageSubpath, parentURL, opts, readPackage) {
-  for (const packageURL of exports.lookupPackageScope(parentURL)) {
-    const pkg = readPackage(packageURL)
+exports.packageSelf = function * (packageName, packageSubpath, parentURL, opts) {
+  for (const packageURL of lookupPackageScope(parentURL)) {
+    const info = yield pkg(packageURL)
 
-    if (pkg) {
-      if (pkg.exports && pkg.name === packageName) {
-        yield * exports.packageExports(packageURL, packageSubpath, pkg.exports, opts, readPackage)
+    if (info) {
+      if (info.exports && info.name === packageName) {
+        return yield * exports.packageExports(packageURL, packageSubpath, info.exports, opts)
       }
 
-      return
+      break
     }
   }
+
+  return false
 }
 
-exports.packageExports = function * (packageURL, subpath, packageExports, opts, readPackage) {
+exports.packageExports = function * (packageURL, subpath, packageExports, opts) {
   if (subpath === '.') {
     let mainExport
 
@@ -137,9 +204,7 @@ exports.packageExports = function * (packageURL, subpath, packageExports, opts, 
     }
 
     if (mainExport) {
-      for (const resolved of exports.packageTarget(packageURL, mainExport, null, false, opts, readPackage)) {
-        return yield resolved
-      }
+      return yield * exports.packageTarget(packageURL, mainExport, null, false, opts)
     }
   } else if (typeof packageExports === 'object' && packageExports !== null) {
     const keys = Object.keys(packageExports)
@@ -147,28 +212,24 @@ exports.packageExports = function * (packageURL, subpath, packageExports, opts, 
     if (keys.every(key => key.startsWith('.'))) {
       const matchKey = subpath
 
-      for (const resolved of exports.packageImportsExports(matchKey, packageExports, packageURL, false, opts, readPackage)) {
-        return yield resolved
-      }
+      return yield * exports.packageImportsExports(matchKey, packageExports, packageURL, false, opts)
     }
   }
 
   throw errors.PACKAGE_PATH_NOT_EXPORTED()
 }
 
-exports.packageImports = function * (specifier, parentURL, opts, readPackage) {
+exports.packageImports = function * (specifier, parentURL, opts) {
   if (specifier === '#' || specifier.startsWith('#/')) {
     throw errors.INVALID_MODULE_SPECIFIER()
   }
 
-  for (const packageURL of exports.lookupPackageScope(parentURL)) {
-    const pkg = readPackage(packageURL)
+  for (const packageURL of lookupPackageScope(parentURL)) {
+    const info = yield pkg(packageURL)
 
-    if (pkg) {
-      if (pkg.imports) {
-        for (const resolved of exports.packageImportsExports(specifier, pkg.imports, packageURL, true, opts, readPackage)) {
-          return yield resolved
-        }
+    if (info) {
+      if (info.imports) {
+        return yield * exports.packageImportsExports(specifier, info.imports, packageURL, true, opts)
       }
 
       break
@@ -178,13 +239,15 @@ exports.packageImports = function * (specifier, parentURL, opts, readPackage) {
   if (specifier.startsWith('#')) {
     throw errors.PACKAGE_IMPORT_NOT_DEFINED()
   }
+
+  return false
 }
 
-exports.packageImportsExports = function * (matchKey, matchObject, packageURL, isImports, opts, readPackage) {
+exports.packageImportsExports = function * (matchKey, matchObject, packageURL, isImports, opts) {
   if (matchKey in matchObject && !matchKey.includes('*')) {
     const target = matchObject[matchKey]
 
-    return yield * exports.packageTarget(packageURL, target, null, isImports, opts, readPackage)
+    return yield * exports.packageTarget(packageURL, target, null, isImports, opts)
   }
 
   const expansionKeys = Object.keys(matchObject).filter(key => key.includes('*')).sort(patternKeyCompare)
@@ -201,10 +264,12 @@ exports.packageImportsExports = function * (matchKey, matchObject, packageURL, i
 
         const patternMatch = matchKey.substring(patternBase.length, matchKey.length - patternTrailer.length)
 
-        return yield * exports.packageTarget(packageURL, target, patternMatch, isImports, opts, readPackage)
+        return yield * exports.packageTarget(packageURL, target, patternMatch, isImports, opts)
       }
     }
   }
+
+  return false
 }
 
 function patternKeyCompare (keyA, keyB) {
@@ -221,10 +286,8 @@ function patternKeyCompare (keyA, keyB) {
   return 0
 }
 
-exports.packageTarget = function * (packageURL, target, patternMatch, isImports, opts, readPackage) {
-  const {
-    conditions = []
-  } = opts
+exports.packageTarget = function * (packageURL, target, patternMatch, isImports, opts) {
+  const { conditions = [] } = opts
 
   if (typeof target === 'string') {
     if (!target.startsWith('./') && !isImports) {
@@ -236,17 +299,25 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
     }
 
     if (target === '.' || target[0] === '/' || target.startsWith('./') || target.startsWith('../')) {
-      yield new URL(target, packageURL)
-    } else {
-      yield * exports.package(target, packageURL, opts, readPackage)
+      yield mod(new URL(target, packageURL))
+
+      return true
     }
-  } else if (Array.isArray(target)) {
+
+    return yield * exports.package(target, packageURL, opts)
+  }
+
+  if (Array.isArray(target)) {
     for (const targetValue of target) {
-      for (const resolved of exports.packageTarget(packageURL, targetValue, patternMatch, isImports, opts, readPackage)) {
-        return yield resolved
+      if (yield * exports.packageTarget(packageURL, targetValue, patternMatch, isImports, opts)) {
+        return true
       }
     }
-  } else if (typeof target === 'object' && target !== null) {
+
+    return false
+  }
+
+  if (typeof target === 'object' && target !== null) {
     const keys = Object.keys(target)
 
     for (const p of keys) {
@@ -259,13 +330,15 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
       if (p === 'default' || conditions.includes(p)) {
         const targetValue = target[p]
 
-        return yield * exports.packageTarget(packageURL, targetValue, patternMatch, isImports, opts, readPackage)
+        return yield * exports.packageTarget(packageURL, targetValue, patternMatch, isImports, opts)
       }
     }
   }
+
+  return false
 }
 
-exports.lookupPackageScope = function * (url) {
+function * lookupPackageScope (url) {
   const scopeURL = new URL(url.href)
 
   do {
@@ -278,9 +351,7 @@ exports.lookupPackageScope = function * (url) {
 }
 
 exports.file = function * (filename, parentURL, allowBare, opts) {
-  const {
-    extensions = []
-  } = opts
+  const { extensions = [] } = opts
 
   const candidates = []
 
@@ -291,24 +362,28 @@ exports.file = function * (filename, parentURL, allowBare, opts) {
   }
 
   for (const candidate of candidates) {
-    yield new URL(candidate, parentURL)
+    yield mod(new URL(candidate, parentURL))
   }
+
+  return candidates.length > 0
 }
 
-exports.directory = function * (dirname, parentURL, opts, readPackage) {
+exports.directory = function * (dirname, parentURL, opts) {
   parentURL = new URL(dirname === '/' ? dirname : dirname + '/', parentURL)
 
-  const pkg = readPackage(new URL('package.json', parentURL))
+  const info = yield pkg(new URL('package.json', parentURL))
 
-  if (pkg) {
-    if (pkg.exports) {
-      return yield * exports.packageExports(parentURL, '.', pkg.exports, opts, readPackage)
+  if (info) {
+    if (info.exports) {
+      return yield * exports.packageExports(parentURL, '.', info.exports, opts)
     }
 
-    if (typeof pkg.main === 'string') {
-      return yield new URL(pkg.main, parentURL)
+    if (typeof info.main === 'string') {
+      yield mod(new URL(info.main, parentURL))
+
+      return true
     }
   }
 
-  yield * exports.file('index', parentURL, false, opts)
+  return yield * exports.file('index', parentURL, false, opts)
 }
