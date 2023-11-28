@@ -1,6 +1,5 @@
 const test = require('brittle')
 const resolve = require('.')
-const { url, expand } = require('./test/helpers')
 
 test('bare specifier', (t) => {
   function readPackage (url) {
@@ -11,12 +10,13 @@ test('bare specifier', (t) => {
     return null
   }
 
-  t.alike(
-    expand(resolve('d', url('file:///a/b/c'), { extensions: ['.js'] }, readPackage)),
-    [
-      'file:///a/b/node_modules/d/index.js'
-    ]
-  )
+  const result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/index.js'])
 })
 
 test('bare specifier with subpath', (t) => {
@@ -28,14 +28,17 @@ test('bare specifier with subpath', (t) => {
     return null
   }
 
-  t.alike(
-    expand(resolve('d/e', url('file:///a/b/c'), { extensions: ['.js'] }, readPackage)),
-    [
-      'file:///a/b/node_modules/d/e',
-      'file:///a/b/node_modules/d/e.js',
-      'file:///a/b/node_modules/d/e/index.js'
-    ]
-  )
+  const result = []
+
+  for (const resolution of resolve('d/e', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [
+    'file:///a/b/node_modules/d/e',
+    'file:///a/b/node_modules/d/e.js',
+    'file:///a/b/node_modules/d/e/index.js'
+  ])
 })
 
 test('bare specifier with subpath and extension', (t) => {
@@ -47,14 +50,17 @@ test('bare specifier with subpath and extension', (t) => {
     return null
   }
 
-  t.alike(
-    expand(resolve('d/e.js', url('file:///a/b/c'), { extensions: ['.js'] }, readPackage)),
-    [
-      'file:///a/b/node_modules/d/e.js',
-      'file:///a/b/node_modules/d/e.js.js',
-      'file:///a/b/node_modules/d/e.js/index.js'
-    ]
-  )
+  const result = []
+
+  for (const resolution of resolve('d/e.js', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [
+    'file:///a/b/node_modules/d/e.js',
+    'file:///a/b/node_modules/d/e.js.js',
+    'file:///a/b/node_modules/d/e.js/index.js'
+  ])
 })
 
 test('bare specifier with package.json#main', (t) => {
@@ -68,12 +74,13 @@ test('bare specifier with package.json#main', (t) => {
     return null
   }
 
-  t.alike(
-    expand(resolve('d', url('file:///a/b/c'), { extensions: ['.js'] }, readPackage)),
-    [
-      'file:///a/b/node_modules/d/e.js'
-    ]
-  )
+  const result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/e.js'])
 })
 
 test('bare specifier with packge.json#imports', (t) => {
@@ -89,12 +96,13 @@ test('bare specifier with packge.json#imports', (t) => {
     return null
   }
 
-  t.alike(
-    expand(resolve('f', url('file:///a/b/node_modules/d/e.js'), { extensions: ['.js'] }, readPackage)),
-    [
-      'file:///a/b/node_modules/d/g.js'
-    ]
-  )
+  const result = []
+
+  for (const resolution of resolve('f', new URL('file:///a/b/node_modules/d/e.js'), { extensions: ['.js'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/g.js'])
 })
 
 test('bare specifier with packge.json#imports, map to builtin', (t) => {
@@ -110,52 +118,63 @@ test('bare specifier with packge.json#imports, map to builtin', (t) => {
     return null
   }
 
-  t.alike(
-    expand(resolve('f', url('file:///a/b/node_modules/d/e.js'), { extensions: ['.js'], builtins: ['foo'] }, readPackage)),
-    [
-      'builtin:foo'
-    ]
-  )
+  const result = []
+
+  for (const resolution of resolve('f', new URL('file:///a/b/node_modules/d/e.js'), { extensions: ['.js'], builtins: ['foo'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [
+    'builtin:foo'
+  ])
 })
 
 test('relative specifier', (t) => {
-  t.alike(
-    expand(resolve('./d', url('file:///a/b/c'), { extensions: ['.js'] }, noPackage)),
-    [
-      'file:///a/b/d',
-      'file:///a/b/d.js',
-      'file:///a/b/d/index.js'
-    ]
-  )
+  const result = []
+
+  for (const resolution of resolve('./d', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [
+    'file:///a/b/d',
+    'file:///a/b/d.js',
+    'file:///a/b/d/index.js'
+  ])
 })
 
 test('relative specifier with no default extensions', (t) => {
-  t.alike(
-    expand(resolve('./d', url('file:///a/b/c'), noPackage)),
-    [
-      'file:///a/b/d'
-    ]
-  )
+  const result = []
+
+  for (const resolution of resolve('./d', new URL('file:///a/b/c'), noPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/d'])
 })
 
 test('relative specifier with extension', (t) => {
-  t.alike(
-    expand(resolve('./d.js', url('file:///a/b/c'), { extensions: ['.js'] }, noPackage)),
-    [
-      'file:///a/b/d.js',
-      'file:///a/b/d.js.js',
-      'file:///a/b/d.js/index.js'
-    ]
-  )
+  const result = []
+
+  for (const resolution of resolve('./d.js', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [
+    'file:///a/b/d.js',
+    'file:///a/b/d.js.js',
+    'file:///a/b/d.js/index.js'
+  ])
 })
 
 test('relative specifier with extension and no default extensions', (t) => {
-  t.alike(
-    expand(resolve('./d.js', url('file:///a/b/c'), noPackage)),
-    [
-      'file:///a/b/d.js'
-    ]
-  )
+  const result = []
+
+  for (const resolution of resolve('./d.js', new URL('file:///a/b/c'), noPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/d.js'])
 })
 
 test('relative specifier with scoped package.json#main', (t) => {
@@ -169,14 +188,17 @@ test('relative specifier with scoped package.json#main', (t) => {
     return null
   }
 
-  t.alike(
-    expand(resolve('./d', url('file:///a/b/c'), { extensions: ['.js'] }, readPackage)),
-    [
-      'file:///a/b/d',
-      'file:///a/b/d.js',
-      'file:///a/b/d/e.js'
-    ]
-  )
+  const result = []
+
+  for (const resolution of resolve('./d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [
+    'file:///a/b/d',
+    'file:///a/b/d.js',
+    'file:///a/b/d/e.js'
+  ])
 })
 
 test('relative specifier with scoped package.json#exports', (t) => {
@@ -190,34 +212,61 @@ test('relative specifier with scoped package.json#exports', (t) => {
     return null
   }
 
-  t.alike(
-    expand(resolve('./d', url('file:///a/b/c'), { extensions: ['.js'] }, readPackage)),
-    [
-      'file:///a/b/d',
-      'file:///a/b/d.js',
-      'file:///a/b/d/e.js'
-    ]
-  )
+  const result = []
+
+  for (const resolution of resolve('./d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [
+    'file:///a/b/d',
+    'file:///a/b/d.js',
+    'file:///a/b/d/e.js'
+  ])
 })
 
 test('relative specifier with percent encoded /', async (t) => {
-  await t.exception(
-    () => expand(resolve('./d%2fe', url('file:///a/b/c'), noPackage))
-  )
+  try {
+    for (const resolution of resolve('./d%2fe', new URL('file:///a/b/c'), noPackage)) {
+      t.absent(resolution)
+    }
 
-  await t.exception(
-    () => expand(resolve('./d%2Fe', url('file:///a/b/c'), noPackage))
-  )
+    t.fail()
+  } catch (err) {
+    t.ok(err)
+  }
+
+  try {
+    for (const resolution of resolve('./d%2Fe', new URL('file:///a/b/c'), noPackage)) {
+      t.absent(resolution)
+    }
+
+    t.fail()
+  } catch (err) {
+    t.ok(err)
+  }
 })
 
 test('relative specifier with percent encoded \\', async (t) => {
-  await t.exception(
-    () => expand(resolve('./d%5ce', url('file:///a/b/c'), noPackage))
-  )
+  try {
+    for (const resolution of resolve('./d%5ce', new URL('file:///a/b/c'), noPackage)) {
+      t.absent(resolution)
+    }
 
-  await t.exception(
-    () => expand(resolve('./d%5Ce', url('file:///a/b/c'), noPackage))
-  )
+    t.fail()
+  } catch (err) {
+    t.ok(err)
+  }
+
+  try {
+    for (const resolution of resolve('./d%5Ce', new URL('file:///a/b/c'), noPackage)) {
+      t.absent(resolution)
+    }
+
+    t.fail()
+  } catch (err) {
+    t.ok(err)
+  }
 })
 
 test('package.json#exports with expansion key', (t) => {
@@ -233,12 +282,13 @@ test('package.json#exports with expansion key', (t) => {
     return null
   }
 
-  t.alike(
-    expand(resolve('d/e/g.js', url('file:///a/b/c'), readPackage)),
-    [
-      'file:///a/b/node_modules/d/f/g.js'
-    ]
-  )
+  const result = []
+
+  for (const resolution of resolve('d/e/g.js', new URL('file:///a/b/c'), readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/f/g.js'])
 })
 
 test('package.json#exports with conditions', (t) => {
@@ -256,26 +306,29 @@ test('package.json#exports with conditions', (t) => {
     return null
   }
 
-  t.alike(
-    expand(resolve('d', url('file:///a/b/c'), { conditions: ['require'] }, readPackage)),
-    [
-      'file:///a/b/node_modules/d/e.cjs'
-    ]
-  )
+  let result = []
 
-  t.alike(
-    expand(resolve('d', url('file:///a/b/c'), { conditions: ['import'] }, readPackage)),
-    [
-      'file:///a/b/node_modules/d/e.mjs'
-    ]
-  )
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { conditions: ['require'] }, readPackage)) {
+    result.push(resolution.href)
+  }
 
-  t.alike(
-    expand(resolve('d', url('file:///a/b/c'), readPackage)),
-    [
-      'file:///a/b/node_modules/d/e.js'
-    ]
-  )
+  t.alike(result, ['file:///a/b/node_modules/d/e.cjs'])
+
+  result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { conditions: ['import'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/e.mjs'])
+
+  result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/e.js'])
 })
 
 test('package.json#exports with conditions and subpath', (t) => {
@@ -295,26 +348,29 @@ test('package.json#exports with conditions and subpath', (t) => {
     return null
   }
 
-  t.alike(
-    expand(resolve('d/e', url('file:///a/b/c'), { conditions: ['require'] }, readPackage)),
-    [
-      'file:///a/b/node_modules/d/e.cjs'
-    ]
-  )
+  let result = []
 
-  t.alike(
-    expand(resolve('d/e', url('file:///a/b/c'), { conditions: ['import'] }, readPackage)),
-    [
-      'file:///a/b/node_modules/d/e.mjs'
-    ]
-  )
+  for (const resolution of resolve('d/e', new URL('file:///a/b/c'), { conditions: ['require'] }, readPackage)) {
+    result.push(resolution.href)
+  }
 
-  t.alike(
-    expand(resolve('d/e', url('file:///a/b/c'), readPackage)),
-    [
-      'file:///a/b/node_modules/d/e.js'
-    ]
-  )
+  t.alike(result, ['file:///a/b/node_modules/d/e.cjs'])
+
+  result = []
+
+  for (const resolution of resolve('d/e', new URL('file:///a/b/c'), { conditions: ['import'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/e.mjs'])
+
+  result = []
+
+  for (const resolution of resolve('d/e', new URL('file:///a/b/c'), readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/e.js'])
 })
 
 test('package.json#imports with expansion key', (t) => {
@@ -330,12 +386,13 @@ test('package.json#imports with expansion key', (t) => {
     return null
   }
 
-  t.alike(
-    expand(resolve('./e/g.js', url('file:///a/b/d/'), readPackage)),
-    [
-      'file:///a/b/d/f/g.js'
-    ]
-  )
+  const result = []
+
+  for (const resolution of resolve('./e/g.js', new URL('file:///a/b/d/'), readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/d/f/g.js'])
 })
 
 test('package.json#imports with private key', (t) => {
@@ -351,12 +408,13 @@ test('package.json#imports with private key', (t) => {
     return null
   }
 
-  t.alike(
-    expand(resolve('#e', url('file:///a/b/d/'), readPackage)),
-    [
-      'file:///a/b/d/e.js'
-    ]
-  )
+  const result = []
+
+  for (const resolution of resolve('#e', new URL('file:///a/b/d/'), readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/d/e.js'])
 })
 
 test('package.json#imports with private expansion key', (t) => {
@@ -372,12 +430,13 @@ test('package.json#imports with private expansion key', (t) => {
     return null
   }
 
-  t.alike(
-    expand(resolve('#e/g.js', url('file:///a/b/d/'), readPackage)),
-    [
-      'file:///a/b/d/f/g.js'
-    ]
-  )
+  const result = []
+
+  for (const resolution of resolve('#e/g.js', new URL('file:///a/b/d/'), readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/d/f/g.js'])
 })
 
 test('async package reads', async (t) => {
@@ -391,13 +450,11 @@ test('async package reads', async (t) => {
 
   const result = []
 
-  for await (const resolution of resolve('d', url('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
+  for await (const resolution of resolve('d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
     result.push(resolution.href)
   }
 
-  t.alike(result, [
-    'file:///a/b/node_modules/d/index.js'
-  ])
+  t.alike(result, ['file:///a/b/node_modules/d/index.js'])
 })
 
 function noPackage () {
