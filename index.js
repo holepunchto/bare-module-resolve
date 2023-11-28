@@ -24,6 +24,8 @@ module.exports = exports = function resolve (specifier, parentURL, opts, readPac
           next = generator.next()
         }
       }
+
+      return next.value
     },
 
     async * [Symbol.asyncIterator] () {
@@ -41,6 +43,8 @@ module.exports = exports = function resolve (specifier, parentURL, opts, readPac
           next = generator.next()
         }
       }
+
+      return next.value
     }
   }
 }
