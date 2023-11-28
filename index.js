@@ -8,11 +8,21 @@ module.exports = exports = function * resolve (specifier, parentURL, opts, readP
 
   if (!opts) opts = {}
 
+  for (const resolved of exports.module(specifier, parentURL, opts, readPackage)) {
+    if (resolved.protocol === 'file:' && /%2f|%5c/i.test(resolved.href)) {
+      throw errors.INVALID_MODULE_SPECIFIER()
+    }
+
+    yield resolved
+  }
+}
+
+exports.module = function * (specifier, parentURL, opts, readPackage) {
   const {
     imports = null
   } = opts
 
-  if (imports) yield * exports.packageImportsExports(specifier, imports, parentURL, opts, readPackage)
+  if (imports) yield * exports.packageImportsExports(specifier, imports, parentURL, true, opts, readPackage)
 
   yield * exports.packageImports(specifier, parentURL, opts, readPackage)
 
@@ -47,7 +57,7 @@ exports.package = function * (packageSpecifier, parentURL, opts, readPackage) {
     packageName = packageSpecifier.split('/', 2).join('/')
   }
 
-  if (packageName[0] === '' || packageName.includes('\\') || packageName.includes('%')) {
+  if (packageName[0] === '.' || packageName.includes('\\') || packageName.includes('%')) {
     throw errors.INVALID_MODULE_SPECIFIER()
   }
 
@@ -104,6 +114,8 @@ exports.packageSelf = function * (packageName, packageSubpath, parentURL, opts, 
 }
 
 exports.packageExports = function * (packageURL, subpath, packageExports, opts, readPackage) {
+  let count = 0
+
   if (subpath === '.') {
     let mainExport
 
@@ -120,55 +132,111 @@ exports.packageExports = function * (packageURL, subpath, packageExports, opts, 
     }
 
     if (mainExport) {
-      yield * exports.packageTarget(packageURL, mainExport, null, opts, readPackage)
+      for (const resolved of exports.packageTarget(packageURL, mainExport, null, false, opts, readPackage)) {
+        yield resolved
+        count++
+      }
+
+      if (count) return
     }
-  } else if (typeof packageExports === 'object') {
+  } else if (typeof packageExports === 'object' && packageExports !== null) {
     const keys = Object.keys(packageExports)
 
     if (keys.every(key => key.startsWith('.'))) {
-      const matchKey = './' + subpath
+      const matchKey = subpath
 
-      yield * exports.packageImportsExports(matchKey, packageExports, packageURL, opts, readPackage)
+      for (const resolved of exports.packageImportsExports(matchKey, packageExports, packageURL, false, opts, readPackage)) {
+        yield resolved
+        count++
+      }
+
+      if (count) return
     }
   }
+
+  throw errors.PACKAGE_PATH_NOT_EXPORTED()
 }
 
 exports.packageImports = function * (specifier, parentURL, opts, readPackage) {
+  if (specifier === '#' || specifier.startsWith('#/')) {
+    throw errors.INVALID_MODULE_SPECIFIER()
+  }
+
   for (const packageURL of exports.lookupPackageScope(parentURL)) {
     const pkg = readPackage(packageURL)
 
     if (pkg) {
       if (pkg.imports) {
-        return yield * exports.packageImportsExports(specifier, pkg.imports, packageURL, opts, readPackage)
+        let count = 0
+
+        for (const resolved of exports.packageImportsExports(specifier, pkg.imports, packageURL, true, opts, readPackage)) {
+          yield resolved
+          count++
+        }
+
+        if (count) return
       }
 
-      return
+      break
     }
+  }
+
+  if (specifier.startsWith('#')) {
+    throw errors.PACKAGE_IMPORT_NOT_DEFINED()
   }
 }
 
-exports.packageImportsExports = function * (matchKey, matchObject, packageURL, opts, readPackage) {
+exports.packageImportsExports = function * (matchKey, matchObject, packageURL, isImports, opts, readPackage) {
   if (matchKey in matchObject && !matchKey.includes('*')) {
     const target = matchObject[matchKey]
 
-    return yield * exports.packageTarget(packageURL, target, null, opts, readPackage)
+    return yield * exports.packageTarget(packageURL, target, null, isImports, opts, readPackage)
   }
 
   const expansionKeys = Object.keys(matchObject).filter(key => key.includes('*')).sort(patternKeyCompare)
 
-  // TODO
+  for (const expansionKey of expansionKeys) {
+    const patternIndex = expansionKey.indexOf('*')
+    const patternBase = expansionKey.substring(0, patternIndex)
+
+    if (matchKey.startsWith(patternBase) && matchKey !== patternBase) {
+      const patternTrailer = expansionKey.substring(patternIndex + 1)
+
+      if (patternTrailer === '' || (matchKey.endsWith(patternTrailer) && matchKey.length >= expansionKey.length)) {
+        const target = matchObject[expansionKey]
+
+        const patternMatch = matchKey.substring(patternBase.length, matchKey.length - patternTrailer.length)
+
+        return yield * exports.packageTarget(packageURL, target, patternMatch, isImports, opts, readPackage)
+      }
+    }
+  }
 }
 
 function patternKeyCompare (keyA, keyB) {
-  // TODO
+  const patternIndexA = keyA.indexOf('*')
+  const patternIndexB = keyB.indexOf('*')
+  const baseLengthA = patternIndexA === -1 ? keyA.length : patternIndexA + 1
+  const baseLengthB = patternIndexB === -1 ? keyB.length : patternIndexB + 1
+  if (baseLengthA > baseLengthB) return -1
+  if (baseLengthB > baseLengthA) return 1
+  if (patternIndexA === -1) return 1
+  if (patternIndexB === -1) return -1
+  if (keyA.length > keyB.length) return -1
+  if (keyB.length > keyA.length) return 1
+  return 0
 }
 
-exports.packageTarget = function * (packageURL, target, patternMatch, opts, readPackage) {
+exports.packageTarget = function * (packageURL, target, patternMatch, isImports, opts, readPackage) {
   const {
     conditions = []
   } = opts
 
   if (typeof target === 'string') {
+    if (!target.startsWith('./') && !isImports) {
+      throw errors.INVALID_PACKAGE_TARGET()
+    }
+
     if (patternMatch !== null) {
       target = target.replaceAll('*', patternMatch)
     }
@@ -180,14 +248,22 @@ exports.packageTarget = function * (packageURL, target, patternMatch, opts, read
     }
   } else if (Array.isArray(target)) {
     for (const targetValue of target) {
-      yield * exports.packageTarget(packageURL, targetValue, patternMatch, opts, readPackage)
+      yield * exports.packageTarget(packageURL, targetValue, patternMatch, isImports, opts, readPackage)
     }
-  } else if (target) {
-    for (const p in target) {
+  } else if (typeof target === 'object' && target !== null) {
+    const keys = Object.keys(target)
+
+    for (const p of keys) {
+      if (p === +p.toString()) {
+        throw errors.INVALID_PACKAGE_CONFIGURATION()
+      }
+    }
+
+    for (const p of keys) {
       if (p === 'default' || conditions.includes(p)) {
         const targetValue = target[p]
 
-        yield * exports.packageTarget(packageURL, targetValue, patternMatch, opts, readPackage)
+        yield * exports.packageTarget(packageURL, targetValue, patternMatch, isImports, opts, readPackage)
       }
     }
   }

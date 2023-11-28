@@ -182,6 +182,47 @@ test('relative specifier with scoped package.json#exports', (t) => {
   )
 })
 
+test('relative specifier with percent encoded /', async (t) => {
+  await t.exception(
+    () => expand(resolve('./d%2fe', url('file:///a/b/c'), noPackage))
+  )
+
+  await t.exception(
+    () => expand(resolve('./d%2Fe', url('file:///a/b/c'), noPackage))
+  )
+})
+
+test('relative specifier with percent encoded \\', async (t) => {
+  await t.exception(
+    () => expand(resolve('./d%5ce', url('file:///a/b/c'), noPackage))
+  )
+
+  await t.exception(
+    () => expand(resolve('./d%5Ce', url('file:///a/b/c'), noPackage))
+  )
+})
+
+test('package.json#exports with expansion key', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        exports: {
+          './e/*.js': './f/*.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  t.alike(
+    expand(resolve('d/e/g.js', url('file:///a/b/c'), readPackage)),
+    [
+      'file:///a/b/node_modules/d/f/g.js'
+    ]
+  )
+})
+
 function noPackage () {
   return null
 }
