@@ -129,6 +129,15 @@ test('relative specifier', (t) => {
   )
 })
 
+test('relative specifier with no default extensions', (t) => {
+  t.alike(
+    expand(resolve('./d', url('file:///a/b/c'), noPackage)),
+    [
+      'file:///a/b/d'
+    ]
+  )
+})
+
 test('relative specifier with extension', (t) => {
   t.alike(
     expand(resolve('./d.js', url('file:///a/b/c'), { extensions: ['.js'] }, noPackage)),
@@ -136,6 +145,15 @@ test('relative specifier with extension', (t) => {
       'file:///a/b/d.js',
       'file:///a/b/d.js.js',
       'file:///a/b/d.js/index.js'
+    ]
+  )
+})
+
+test('relative specifier with extension and no default extensions', (t) => {
+  t.alike(
+    expand(resolve('./d.js', url('file:///a/b/c'), noPackage)),
+    [
+      'file:///a/b/d.js'
     ]
   )
 })
@@ -219,6 +237,87 @@ test('package.json#exports with expansion key', (t) => {
     expand(resolve('d/e/g.js', url('file:///a/b/c'), readPackage)),
     [
       'file:///a/b/node_modules/d/f/g.js'
+    ]
+  )
+})
+
+test('package.json#exports with conditions', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        exports: {
+          require: './e.cjs',
+          import: './e.mjs'
+        }
+      }
+    }
+
+    return null
+  }
+
+  t.alike(
+    expand(resolve('d', url('file:///a/b/c'), { conditions: ['require'] }, readPackage)),
+    [
+      'file:///a/b/node_modules/d/e.cjs'
+    ]
+  )
+
+  t.alike(
+    expand(resolve('d', url('file:///a/b/c'), { conditions: ['import'] }, readPackage)),
+    [
+      'file:///a/b/node_modules/d/e.mjs'
+    ]
+  )
+})
+
+test('package.json#exports with conditions and subpath', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        exports: {
+          './e': {
+            require: './e.cjs',
+            import: './e.mjs'
+          }
+        }
+      }
+    }
+
+    return null
+  }
+
+  t.alike(
+    expand(resolve('d/e', url('file:///a/b/c'), { conditions: ['require'] }, readPackage)),
+    [
+      'file:///a/b/node_modules/d/e.cjs'
+    ]
+  )
+
+  t.alike(
+    expand(resolve('d/e', url('file:///a/b/c'), { conditions: ['import'] }, readPackage)),
+    [
+      'file:///a/b/node_modules/d/e.mjs'
+    ]
+  )
+})
+
+test('package.json#imports with expansion key', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/d/package.json') {
+      return {
+        imports: {
+          './e/*.js': './f/*.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  t.alike(
+    expand(resolve('./e/g.js', url('file:///a/b/d/'), readPackage)),
+    [
+      'file:///a/b/d/f/g.js'
     ]
   )
 })

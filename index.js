@@ -22,9 +22,23 @@ exports.module = function * (specifier, parentURL, opts, readPackage) {
     imports = null
   } = opts
 
-  if (imports) yield * exports.packageImportsExports(specifier, imports, parentURL, true, opts, readPackage)
+  let count = 0
 
-  yield * exports.packageImports(specifier, parentURL, opts, readPackage)
+  if (imports) {
+    for (const resolved of exports.packageImportsExports(specifier, imports, parentURL, true, opts, readPackage)) {
+      yield resolved
+      count++
+    }
+
+    if (count) return
+  }
+
+  for (const resolved of exports.packageImports(specifier, parentURL, opts, readPackage)) {
+    yield resolved
+    count++
+  }
+
+  if (count) return
 
   if (specifier === '.' || specifier[0] === '/' || specifier.startsWith('./') || specifier.startsWith('../')) {
     yield * exports.file(specifier, parentURL, true, opts)
