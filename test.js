@@ -247,7 +247,8 @@ test('package.json#exports with conditions', (t) => {
       return {
         exports: {
           require: './e.cjs',
-          import: './e.mjs'
+          import: './e.mjs',
+          default: './e.js'
         }
       }
     }
@@ -268,6 +269,13 @@ test('package.json#exports with conditions', (t) => {
       'file:///a/b/node_modules/d/e.mjs'
     ]
   )
+
+  t.alike(
+    expand(resolve('d', url('file:///a/b/c'), readPackage)),
+    [
+      'file:///a/b/node_modules/d/e.js'
+    ]
+  )
 })
 
 test('package.json#exports with conditions and subpath', (t) => {
@@ -277,7 +285,8 @@ test('package.json#exports with conditions and subpath', (t) => {
         exports: {
           './e': {
             require: './e.cjs',
-            import: './e.mjs'
+            import: './e.mjs',
+            default: './e.js'
           }
         }
       }
@@ -297,6 +306,13 @@ test('package.json#exports with conditions and subpath', (t) => {
     expand(resolve('d/e', url('file:///a/b/c'), { conditions: ['import'] }, readPackage)),
     [
       'file:///a/b/node_modules/d/e.mjs'
+    ]
+  )
+
+  t.alike(
+    expand(resolve('d/e', url('file:///a/b/c'), readPackage)),
+    [
+      'file:///a/b/node_modules/d/e.js'
     ]
   )
 })

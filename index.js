@@ -1,3 +1,4 @@
+/* eslint-disable no-unreachable-loop */
 const errors = require('./lib/errors')
 
 module.exports = exports = function * resolve (specifier, parentURL, opts, readPackage) {
@@ -22,23 +23,15 @@ exports.module = function * (specifier, parentURL, opts, readPackage) {
     imports = null
   } = opts
 
-  let count = 0
-
   if (imports) {
     for (const resolved of exports.packageImportsExports(specifier, imports, parentURL, true, opts, readPackage)) {
-      yield resolved
-      count++
+      return yield resolved
     }
-
-    if (count) return
   }
 
   for (const resolved of exports.packageImports(specifier, parentURL, opts, readPackage)) {
-    yield resolved
-    count++
+    return yield resolved
   }
-
-  if (count) return
 
   if (specifier === '.' || specifier[0] === '/' || specifier.startsWith('./') || specifier.startsWith('../')) {
     yield * exports.file(specifier, parentURL, true, opts)
@@ -119,7 +112,7 @@ exports.packageSelf = function * (packageName, packageSubpath, parentURL, opts, 
 
     if (pkg) {
       if (pkg.exports && pkg.name === packageName) {
-        return yield * exports.packageExports(packageURL, packageSubpath, pkg.exports, opts, readPackage)
+        yield * exports.packageExports(packageURL, packageSubpath, pkg.exports, opts, readPackage)
       }
 
       return
@@ -128,8 +121,6 @@ exports.packageSelf = function * (packageName, packageSubpath, parentURL, opts, 
 }
 
 exports.packageExports = function * (packageURL, subpath, packageExports, opts, readPackage) {
-  let count = 0
-
   if (subpath === '.') {
     let mainExport
 
@@ -147,11 +138,8 @@ exports.packageExports = function * (packageURL, subpath, packageExports, opts, 
 
     if (mainExport) {
       for (const resolved of exports.packageTarget(packageURL, mainExport, null, false, opts, readPackage)) {
-        yield resolved
-        count++
+        return yield resolved
       }
-
-      if (count) return
     }
   } else if (typeof packageExports === 'object' && packageExports !== null) {
     const keys = Object.keys(packageExports)
@@ -160,11 +148,8 @@ exports.packageExports = function * (packageURL, subpath, packageExports, opts, 
       const matchKey = subpath
 
       for (const resolved of exports.packageImportsExports(matchKey, packageExports, packageURL, false, opts, readPackage)) {
-        yield resolved
-        count++
+        return yield resolved
       }
-
-      if (count) return
     }
   }
 
@@ -181,14 +166,9 @@ exports.packageImports = function * (specifier, parentURL, opts, readPackage) {
 
     if (pkg) {
       if (pkg.imports) {
-        let count = 0
-
         for (const resolved of exports.packageImportsExports(specifier, pkg.imports, packageURL, true, opts, readPackage)) {
-          yield resolved
-          count++
+          return yield resolved
         }
-
-        if (count) return
       }
 
       break
@@ -262,7 +242,9 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
     }
   } else if (Array.isArray(target)) {
     for (const targetValue of target) {
-      yield * exports.packageTarget(packageURL, targetValue, patternMatch, isImports, opts, readPackage)
+      for (const resolved of exports.packageTarget(packageURL, targetValue, patternMatch, isImports, opts, readPackage)) {
+        return yield resolved
+      }
     }
   } else if (typeof target === 'object' && target !== null) {
     const keys = Object.keys(target)
@@ -277,7 +259,7 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
       if (p === 'default' || conditions.includes(p)) {
         const targetValue = target[p]
 
-        yield * exports.packageTarget(packageURL, targetValue, patternMatch, isImports, opts, readPackage)
+        return yield * exports.packageTarget(packageURL, targetValue, patternMatch, isImports, opts, readPackage)
       }
     }
   }
