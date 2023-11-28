@@ -338,6 +338,48 @@ test('package.json#imports with expansion key', (t) => {
   )
 })
 
+test('package.json#imports with private key', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/d/package.json') {
+      return {
+        imports: {
+          '#e': './e.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  t.alike(
+    expand(resolve('#e', url('file:///a/b/d/'), readPackage)),
+    [
+      'file:///a/b/d/e.js'
+    ]
+  )
+})
+
+test('package.json#imports with private expansion key', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/d/package.json') {
+      return {
+        imports: {
+          '#e/*.js': './f/*.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  t.alike(
+    expand(resolve('#e/g.js', url('file:///a/b/d/'), readPackage)),
+    [
+      'file:///a/b/d/f/g.js'
+    ]
+  )
+})
+
 function noPackage () {
   return null
 }
