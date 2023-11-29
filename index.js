@@ -78,7 +78,7 @@ exports.module = function * (specifier, parentURL, opts) {
     return true
   }
 
-  if (specifier === '.' || specifier[0] === '/' || specifier.startsWith('./') || specifier.startsWith('../')) {
+  if (specifier === '.' || specifier === '..' || specifier[0] === '/' || specifier.startsWith('./') || specifier.startsWith('../')) {
     let yielded = false
 
     if (yield * exports.file(specifier, parentURL, true, opts)) {
@@ -101,7 +101,7 @@ exports.package = function * (packageSpecifier, parentURL, opts) {
   let packageName
 
   if (packageSpecifier === '') {
-    throw errors.INVALID_MODULE_SPECIFIER()
+    throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${packageSpecifier}' is not a valid package name`)
   }
 
   if (builtins.includes(packageSpecifier)) {
@@ -114,14 +114,14 @@ exports.package = function * (packageSpecifier, parentURL, opts) {
     packageName = packageSpecifier.split('/', 1).join()
   } else {
     if (!packageSpecifier.includes('/')) {
-      throw errors.INVALID_MODULE_SPECIFIER()
+      throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${packageSpecifier}' is not a valid package name`)
     }
 
     packageName = packageSpecifier.split('/', 2).join('/')
   }
 
   if (packageName[0] === '.' || packageName.includes('\\') || packageName.includes('%')) {
-    throw errors.INVALID_MODULE_SPECIFIER()
+    throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${packageSpecifier}' is not a valid package name`)
   }
 
   let packageSubpath = '.' + packageSpecifier.substring(packageName.length)
@@ -210,7 +210,9 @@ exports.packageExports = function * (packageURL, subpath, packageExports, opts) 
     }
 
     if (mainExport) {
-      return yield * exports.packageTarget(packageURL, mainExport, null, false, opts)
+      if (yield * exports.packageTarget(packageURL, mainExport, null, false, opts)) {
+        return true
+      }
     }
   } else if (typeof packageExports === 'object' && packageExports !== null) {
     const keys = Object.keys(packageExports)
@@ -218,16 +220,20 @@ exports.packageExports = function * (packageURL, subpath, packageExports, opts) 
     if (keys.every(key => key.startsWith('.'))) {
       const matchKey = subpath
 
-      return yield * exports.packageImportsExports(matchKey, packageExports, packageURL, false, opts)
+      if (yield * exports.packageImportsExports(matchKey, packageExports, packageURL, false, opts)) {
+        return true
+      }
     }
   }
 
-  throw errors.PACKAGE_PATH_NOT_EXPORTED()
+  packageURL = new URL('package.json', packageURL)
+
+  throw errors.PACKAGE_PATH_NOT_EXPORTED(`Package subpath '${subpath}' is not defined by "exports" in ${packageURL}`)
 }
 
 exports.packageImports = function * (specifier, parentURL, opts) {
   if (specifier === '#' || specifier.startsWith('#/')) {
-    throw errors.INVALID_MODULE_SPECIFIER()
+    throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${specifier}' is not a valid internal imports specifier`)
   }
 
   for (const packageURL of lookupPackageScope(parentURL)) {
@@ -235,15 +241,15 @@ exports.packageImports = function * (specifier, parentURL, opts) {
 
     if (info) {
       if (info.imports) {
-        return yield * exports.packageImportsExports(specifier, info.imports, packageURL, true, opts)
+        if (yield * exports.packageImportsExports(specifier, info.imports, packageURL, true, opts)) {
+          return true
+        }
       }
 
-      break
+      if (specifier.startsWith('#')) {
+        throw errors.PACKAGE_IMPORT_NOT_DEFINED(`Package import specifier '${specifier}' is not defined by "imports" in ${packageURL}`)
+      }
     }
-  }
-
-  if (specifier.startsWith('#')) {
-    throw errors.PACKAGE_IMPORT_NOT_DEFINED()
   }
 
   return false
@@ -297,7 +303,9 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
 
   if (typeof target === 'string') {
     if (!target.startsWith('./') && !isImports) {
-      throw errors.INVALID_PACKAGE_TARGET()
+      packageURL = new URL('package.json', packageURL)
+
+      throw errors.INVALID_PACKAGE_TARGET(`Invalid target '${target}' defined by "exports" in ${packageURL}`)
     }
 
     if (patternMatch !== null) {
@@ -328,7 +336,9 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
 
     for (const p of keys) {
       if (p === +p.toString()) {
-        throw errors.INVALID_PACKAGE_CONFIGURATION()
+        packageURL = new URL('package.json', packageURL)
+
+        throw errors.INVALID_PACKAGE_CONFIGURATION(`Invalid package configuration ${packageURL}`)
       }
     }
 
@@ -357,7 +367,7 @@ function * lookupPackageScope (url) {
 }
 
 exports.file = function * (filename, parentURL, allowBare, opts) {
-  if (filename[filename.length - 1] === '/') return false
+  if (filename === '.' || filename === '..' || filename[filename.length - 1] === '/') return false
 
   const { extensions = [] } = opts
 
