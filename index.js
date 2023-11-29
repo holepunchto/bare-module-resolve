@@ -49,18 +49,6 @@ module.exports = exports = function resolve (specifier, parentURL, opts, readPac
   }
 }
 
-function mod (moduleURL) {
-  return {
-    module: moduleURL
-  }
-}
-
-function pkg (packageURL) {
-  return {
-    package: packageURL
-  }
-}
-
 exports.module = function * (specifier, parentURL, opts) {
   const { imports = null } = opts
 
@@ -101,7 +89,7 @@ exports.package = function * (packageSpecifier, parentURL, opts) {
   }
 
   if (builtins.includes(packageSpecifier)) {
-    yield mod(new URL('builtin:' + packageSpecifier))
+    yield { module: new URL('builtin:' + packageSpecifier) }
 
     return true
   }
@@ -133,7 +121,7 @@ exports.package = function * (packageSpecifier, parentURL, opts) {
 
     parentURL.pathname = parentURL.pathname.substring(0, parentURL.pathname.lastIndexOf('/'))
 
-    const info = yield pkg(new URL('package.json', packageURL))
+    const info = yield { package: new URL('package.json', packageURL) }
 
     if (info) {
       if (info.exports) {
@@ -175,7 +163,7 @@ exports.package = function * (packageSpecifier, parentURL, opts) {
 
 exports.packageSelf = function * (packageName, packageSubpath, parentURL, opts) {
   for (const packageURL of lookupPackageScope(parentURL)) {
-    const info = yield pkg(packageURL)
+    const info = yield { package: packageURL }
 
     if (info) {
       if (info.exports && info.name === packageName) {
@@ -233,7 +221,7 @@ exports.packageImports = function * (specifier, parentURL, opts) {
   }
 
   for (const packageURL of lookupPackageScope(parentURL)) {
-    const info = yield pkg(packageURL)
+    const info = yield { package: packageURL }
 
     if (info) {
       if (info.imports) {
@@ -309,7 +297,7 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
     }
 
     if (target === '.' || target[0] === '/' || target.startsWith('./') || target.startsWith('../')) {
-      yield mod(new URL(target, packageURL))
+      yield { module: new URL(target, packageURL) }
 
       return true
     }
@@ -372,7 +360,7 @@ exports.file = function * (filename, parentURL, allowBare, opts) {
   }
 
   for (const candidate of candidates) {
-    yield mod(new URL(candidate, parentURL))
+    yield { module: new URL(candidate, parentURL) }
   }
 
   return candidates.length > 0
@@ -381,7 +369,7 @@ exports.file = function * (filename, parentURL, allowBare, opts) {
 exports.directory = function * (dirname, parentURL, opts) {
   parentURL = new URL(dirname[dirname.length - 1] === '/' ? dirname : dirname + '/', parentURL)
 
-  const info = yield pkg(new URL('package.json', parentURL))
+  const info = yield { package: new URL('package.json', parentURL) }
 
   if (info) {
     if (info.exports) {
