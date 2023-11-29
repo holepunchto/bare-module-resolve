@@ -50,10 +50,6 @@ module.exports = exports = function resolve (specifier, parentURL, opts, readPac
 }
 
 function mod (moduleURL) {
-  if (moduleURL.protocol === 'file:' && /%2f|%5c/i.test(moduleURL.href)) {
-    throw errors.INVALID_MODULE_SPECIFIER(`Module '${moduleURL}' is invalid`)
-  }
-
   return {
     module: moduleURL
   }
@@ -360,6 +356,10 @@ function * lookupPackageScope (url) {
 
 exports.file = function * (filename, parentURL, allowBare, opts) {
   if (filename === '.' || filename === '..' || filename[filename.length - 1] === '/') return false
+
+  if (parentURL.protocol === 'file:' && /%2f|%5c/i.test(filename)) {
+    throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${filename}' is invalid`)
+  }
 
   const { extensions = [] } = opts
 
