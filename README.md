@@ -69,6 +69,52 @@ Synchronously iterate the module resolution candidates. The resolved module is t
 
 Asynchronously iterate the module resolution candidates. If `readPackage` returns promises, these will be awaited. The same comments as `for (const resolution of resolver)` apply.
 
+### Algorithm
+
+The following generator functions implement the resolution algorithm, which has been adapted from the Node.js resolution algorithms for CommonJS and ES modules. Unlike Node.js, Bare uses the same resolution algorithm for both module formats.
+
+To drive the generator functions, a loop like the following can be used:
+
+```js
+const generator = resolve.module(specifier, parentURL)
+
+let next = generator.next()
+
+while (next.done !== true) {
+  const value = next.value
+
+  if (value.package) {
+    const info = /* Read and parse `value.package` if it exists, otherwise `null` */;
+
+    next = generator.next(info)
+  } else {
+    const resolution = value.module
+
+    next = generator.next()
+  }
+}
+```
+
+Options are the same as `resolve()` for all functions.
+
+#### `const generator = resolve.module(specifier, parentURL[, options])`
+
+#### `const generator = resolve.package(packageSpecifier, parentURL[, options])`
+
+#### `const generator = resolve.packageSelf(packageName, packageSubpath, parentURL[, options])`
+
+#### `const generator = resolve.packageExports(packageURL, subpath, exports[, options])`
+
+#### `const generator = resolve.packageImports(specifier, parentURL[, options])`
+
+#### `const generator = resolve.packageImportsExports(matchKey, matchObject, packageURL, isImports[, options])`
+
+#### `const generator = resolve.packageTarget(packageURL, target, patternMatch, isImports[, options])`
+
+#### `const generator = resolve.file(filename, parentURL, isIndex[, options])`
+
+#### `const generator = resolve.directory(dirname, parentURL[, options])`
+
 ## License
 
 Apache-2.0
