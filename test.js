@@ -151,6 +151,64 @@ test('bare specifier with packge.json#imports, map to builtin', (t) => {
   t.alike(result, ['builtin:foo'])
 })
 
+test('bare specifier with scope', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/node_modules/@s/d/package.json') {
+      return {}
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve('@s/d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/@s/d/index.js'])
+})
+
+test('bare specifier with scope and subpath', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/node_modules/@s/d/package.json') {
+      return {}
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve('@s/d/e', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [
+    'file:///a/b/node_modules/@s/d/e',
+    'file:///a/b/node_modules/@s/d/e.js',
+    'file:///a/b/node_modules/@s/d/e/index.js'
+  ])
+})
+
+test('bare specifier with trailing slash', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {}
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve('d/', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/index.js'])
+})
+
 test('relative specifier', (t) => {
   const result = []
 
@@ -293,6 +351,16 @@ test('relative specifier with percent encoded \\', async (t) => {
   }
 })
 
+test('relative specifier with trailing slash', (t) => {
+  const result = []
+
+  for (const resolution of resolve('./d/', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/d/index.js'])
+})
+
 test('package.json#exports with expansion key', (t) => {
   function readPackage (url) {
     if (url.href === 'file:///a/b/node_modules/d/package.json') {
@@ -397,6 +465,50 @@ test('package.json#exports with conditions and subpath', (t) => {
   t.alike(result, ['file:///a/b/node_modules/d/e.js'])
 })
 
+test('package.json#exports with self reference', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/d/package.json') {
+      return {
+        name: 'd',
+        exports: './e.js'
+      }
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/d/'), { extensions: ['.js'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [
+    'file:///a/b/d/e.js'
+  ])
+})
+
+test('package.json#exports with self reference and name mismatch', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/d/package.json') {
+      return {
+        name: 'e',
+        exports: './e.js'
+      }
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/d/'), { extensions: ['.js'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [])
+})
+
 test('package.json#imports with expansion key', (t) => {
   function readPackage (url) {
     if (url.href === 'file:///a/b/d/package.json') {
@@ -461,6 +573,30 @@ test('package.json#imports with private expansion key', (t) => {
   }
 
   t.alike(result, ['file:///a/b/d/f/g.js'])
+})
+
+test('package.json#main with trailing slash', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/d/package.json') {
+      return {
+        main: 'e/'
+      }
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve('./d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [
+    'file:///a/b/d',
+    'file:///a/b/d.js',
+    'file:///a/b/d/e/index.js'
+  ])
 })
 
 test('async package reads', async (t) => {

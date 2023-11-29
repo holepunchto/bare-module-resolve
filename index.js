@@ -126,10 +126,6 @@ exports.package = function * (packageSpecifier, parentURL, opts) {
 
   let packageSubpath = '.' + packageSpecifier.substring(packageName.length)
 
-  if (packageSubpath[packageSubpath.length - 1] === '/') {
-    throw errors.INVALID_MODULE_SPECIFIER()
-  }
-
   if (yield * exports.packageSelf(packageName, packageSubpath, parentURL, opts)) {
     return true
   }
@@ -361,6 +357,8 @@ function * lookupPackageScope (url) {
 }
 
 exports.file = function * (filename, parentURL, allowBare, opts) {
+  if (filename[filename.length - 1] === '/') return false
+
   const { extensions = [] } = opts
 
   const candidates = []
