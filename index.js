@@ -51,7 +51,7 @@ module.exports = exports = function resolve (specifier, parentURL, opts, readPac
 
 function mod (moduleURL) {
   if (moduleURL.protocol === 'file:' && /%2f|%5c/i.test(moduleURL.href)) {
-    throw errors.INVALID_MODULE_SPECIFIER()
+    throw errors.INVALID_MODULE_SPECIFIER(`Module '${moduleURL}' is invalid`)
   }
 
   return {
@@ -199,7 +199,7 @@ exports.packageExports = function * (packageURL, subpath, packageExports, opts) 
 
     if (typeof packageExports === 'string' || Array.isArray(packageExports)) {
       mainExport = packageExports
-    } else if (typeof packageExports === 'object') {
+    } else if (typeof packageExports === 'object' && packageExports !== null) {
       const keys = Object.keys(packageExports)
 
       if (keys.some(key => key.startsWith('.'))) {
@@ -333,14 +333,6 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
 
   if (typeof target === 'object' && target !== null) {
     const keys = Object.keys(target)
-
-    for (const p of keys) {
-      if (p === +p.toString()) {
-        packageURL = new URL('package.json', packageURL)
-
-        throw errors.INVALID_PACKAGE_CONFIGURATION(`Invalid package configuration ${packageURL}`)
-      }
-    }
 
     for (const p of keys) {
       if (p === 'default' || conditions.includes(p)) {

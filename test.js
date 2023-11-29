@@ -516,6 +516,76 @@ test('package.json#exports with conditions', (t) => {
   t.alike(result, ['file:///a/b/node_modules/d/e.js'])
 })
 
+test('package.json#exports with conditions and array targets', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        exports: [
+          {
+            require: './e.cjs',
+            import: './e.mjs'
+          },
+          './e.js'
+        ]
+      }
+    }
+
+    return null
+  }
+
+  let result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { conditions: ['require'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/e.cjs'])
+
+  result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { conditions: ['import'] }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/e.mjs'])
+
+  result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/e.js'])
+})
+
+test('package.json#exports with conditions and array targets with no match', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        exports: [
+          {
+            require: './e.cjs',
+            import: './e.mjs'
+          }
+        ]
+      }
+    }
+
+    return null
+  }
+
+  try {
+    for (const resolution of resolve('d', new URL('file:///a/b/c'), readPackage)) {
+      t.absent(resolution)
+    }
+
+    t.fail()
+  } catch (err) {
+    t.comment(err.message)
+    t.ok(err)
+  }
+})
+
 test('package.json#exports with conditions and subpath', (t) => {
   function readPackage (url) {
     if (url.href === 'file:///a/b/node_modules/d/package.json') {
