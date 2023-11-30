@@ -151,7 +151,7 @@ Options are the same as `resolve()` for all functions.
 
 #### `const generator = resolve.packageSelf(packageName, packageSubpath, parentURL[, options])`
 
-1.  For each `packageURL` of `lookupPackageScope(parentURL)`:
+1.  For each value `packageURL` of `lookupPackageScope(parentURL)`:
     1.  Let `info` be the result of yielding `packageURL`.
     2.  If `info` is not `null`:
         1.  If `info.exports` is set and `info.name` equals `packageName`:
@@ -183,7 +183,7 @@ Options are the same as `resolve()` for all functions.
 #### `const generator = resolve.packageImports(specifier, parentURL[, options])`
 
 1.  If `specifier` is `#` or starts with `#/`, throw.
-2.  For each `packageURL` of `lookupPackageScope(parentURL)`:
+2.  For each value `packageURL` of `lookupPackageScope(parentURL)`:
     1.  Let `info` be the result of yielding `packageURL`.
     2.  If `info` is not `null`:
         1.  If `info.imports` is set:
@@ -195,11 +195,72 @@ Options are the same as `resolve()` for all functions.
 
 #### `const generator = resolve.packageImportsExports(matchKey, matchObject, packageURL, isImports[, options])`
 
+1.  If `matchKey` is a key of `matchObject` and `matchKey` does not include `*`:
+    1.  Let `target` be `matchObject[matchKey]`.
+    2.  Return `packageTarget(packageURL, target, null, isImports, options)`.
+2.  Let `expansionKeys` be the keys of `matchObject` that include `*` sorted by `patternKeyCompare`.
+3.  For each value `expansionKey` of `expansionKeys`:
+    1.  Let `patternBase` be the substring of `expansionKey` until the first `*`.
+    2.  If `matchKey` starts with but isn't equal to `patternBase`:
+        1.  Let `patternTrailer` be the substring of `expansionKey` from the position at the index after the first `*`.
+        2.  If `patternTrailer` is the empty string, or if `matchKey` ends with `patternTrailer` and the length of `matchKey` is greater than or equal to the length of `expansionKey`:
+            1.  Let `target` be `matchObject[expansionKey]`.
+            2.  Let `patternMatch` be the substring of `matchKey` from the position at the length of `patternBase` until the length of `matchKey` minus the length of `patternTrailer`.
+            3.  Return `packageTarget(packageURL, target, patternMatch, isImports, options)`.
+4.  Return `false`.
+
 #### `const generator = resolve.packageTarget(packageURL, target, patternMatch, isImports[, options])`
+
+1.  If `target` is a string:
+    1.  If `target` does not start with `./` and `isImports` is `false`, throw.
+    2.  If `patternMatch` is not `null`:
+        1.  Replace every instance of `*` in `target` with `patternMatch`.
+    3.  If `target` equals `.` or `..`, or if `target` starts with `/`, `./`, or `../`:
+        1.  Yield the resolution of `target` relative to `packageURL` and return `true`.
+    4.  Return `package(target, packageURL, options)`.
+2.  If `target` is an array:
+    1.  For each value `targetValue` of `target`:
+        1.  If `packageTarget(packageURL, targetValue, patternMatch, isImports, options)` returns `true`:
+            1.  Return `true`.
+3.  If `target` is a non-`null` object:
+    1.  For each key `p` of `target`:
+        1.  If `p` equals `default` or if `options.conditions` includes `p`:
+            1.  Let `targetValue` be `target[p]`.
+            2.  Return `packageTarget(packageURL, targetValue, patternMatch, isImports, options)`.
+4.  Return `false`.
 
 #### `const generator = resolve.file(filename, parentURL, isIndex[, options])`
 
+1.  If `filename` equals `.` or `..`, or if `filename` ends with `/`:
+    1.  Return `false`.
+2.  If `parentURL` is a `file:` URL and `filename` includes encoded `/` or `\`, throw.
+3.  If `isIndex` is `false`:
+    1.  Yield the resolution of `filename` relative to `parentURL`.
+4.  For each value `ext` of `options.extensions`:
+    1.  Yield the resolution of `filename` concatenated with `ext` relative to `parentURL`.
+5.  If `isIndex` is `false` or `options.extensions` is non-empty:
+    1.  Return `true`.
+6.  Return `false`.
+
 #### `const generator = resolve.directory(dirname, parentURL[, options])`
+
+1.  Let `directoryURL` be `undefined`.
+2.  If `dirname` ends with `/`:
+    1.  Set `directoryURL` to the resolution of `dirname` relative to `parentURL`.
+3.  Otherwise:
+    1.  Set `directoryURL` to the resolution of `dirname` concatenated with `/` relative to `parentURL`.
+4.  Let `info` be the result of yielding the resolution of `package.json` relative to `directoryURL`.
+5.  If `info` is not `null`:
+    1.  If `info.exports` is set:
+        1.  Return `packageExports(directoryURL, '.', info.exports, options)`.
+    2.  If `info.main` is a non-empty string:
+        1.  Let `yielded` be `false`.
+        2.  If `file(info.main, directoryURL, false, options)` returns `true`:
+            1.  Set `yielded` to `true`.
+        3.  If `directory(info.main, directoryURL, options)` returns `true`:
+            1.  Set `yielded` to `true`.
+        4.  Return `yielded`.
+6.  Return `file('index', directoryURL, true, options)`.
 
 ## License
 

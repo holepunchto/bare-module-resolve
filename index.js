@@ -286,7 +286,7 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
       target = target.replaceAll('*', patternMatch)
     }
 
-    if (target === '.' || target[0] === '/' || target.startsWith('./') || target.startsWith('../')) {
+    if (target === '.' || target === '..' || target[0] === '/' || target.startsWith('./') || target.startsWith('../')) {
       yield { module: new URL(target, packageURL) }
 
       return true
@@ -301,11 +301,7 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
         return true
       }
     }
-
-    return false
-  }
-
-  if (typeof target === 'object' && target !== null) {
+  } else if (typeof target === 'object' && target !== null) {
     const keys = Object.keys(target)
 
     for (const p of keys) {
@@ -341,39 +337,41 @@ exports.file = function * (filename, parentURL, isIndex, opts = {}) {
 
   const { extensions = [] } = opts
 
-  const candidates = []
-
-  if (!isIndex) candidates.push(filename)
+  if (!isIndex) {
+    yield { module: new URL(filename, parentURL) }
+  }
 
   for (const ext of extensions) {
-    candidates.push(filename + ext)
+    yield { module: new URL(filename + ext, parentURL) }
   }
 
-  for (const candidate of candidates) {
-    yield { module: new URL(candidate, parentURL) }
-  }
-
-  return candidates.length > 0
+  return !isIndex || extensions.length > 0
 }
 
 exports.directory = function * (dirname, parentURL, opts = {}) {
-  parentURL = new URL(dirname[dirname.length - 1] === '/' ? dirname : dirname + '/', parentURL)
+  let directoryURL
 
-  const info = yield { package: new URL('package.json', parentURL) }
+  if (dirname[dirname.length - 1] === '/') {
+    directoryURL = new URL(dirname, parentURL)
+  } else {
+    directoryURL = new URL(dirname + '/', parentURL)
+  }
+
+  const info = yield { package: new URL('package.json', directoryURL) }
 
   if (info) {
     if (info.exports) {
-      return yield * exports.packageExports(parentURL, '.', info.exports, opts)
+      return yield * exports.packageExports(directoryURL, '.', info.exports, opts)
     }
 
     if (typeof info.main === 'string' && info.main !== '') {
       let yielded = false
 
-      if (yield * exports.file(info.main, parentURL, false, opts)) {
+      if (yield * exports.file(info.main, directoryURL, false, opts)) {
         yielded = true
       }
 
-      if (yield * exports.directory(info.main, parentURL, opts)) {
+      if (yield * exports.directory(info.main, directoryURL, opts)) {
         yielded = true
       }
 
@@ -381,5 +379,5 @@ exports.directory = function * (dirname, parentURL, opts = {}) {
     }
   }
 
-  return yield * exports.file('index', parentURL, true, opts)
+  return yield * exports.file('index', directoryURL, true, opts)
 }
