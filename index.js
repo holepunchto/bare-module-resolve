@@ -192,9 +192,7 @@ exports.packageExports = function * (packageURL, subpath, packageExports, opts =
     const keys = Object.keys(packageExports)
 
     if (keys.every(key => key.startsWith('.'))) {
-      const matchKey = subpath
-
-      if (yield * exports.packageImportsExports(matchKey, packageExports, packageURL, false, opts)) {
+      if (yield * exports.packageImportsExports(subpath, packageExports, packageURL, false, opts)) {
         return true
       }
     }
@@ -223,6 +221,8 @@ exports.packageImports = function * (specifier, parentURL, opts = {}) {
       if (specifier.startsWith('#')) {
         throw errors.PACKAGE_IMPORT_NOT_DEFINED(`Package import specifier '${specifier}' is not defined by "imports" in ${packageURL}`)
       }
+
+      break
     }
   }
 

@@ -151,9 +151,47 @@ Options are the same as `resolve()` for all functions.
 
 #### `const generator = resolve.packageSelf(packageName, packageSubpath, parentURL[, options])`
 
+1.  For each `packageURL` of `lookupPackageScope(parentURL)`:
+    1.  Let `info` be the result of yielding `packageURL`.
+    2.  If `info` is not `null`:
+        1.  If `info.exports` is set and `info.name` equals `packageName`:
+            1.  Return `packageExports(packageURL, packageSubpath, info.exports, options)`.
+        2.  Return `false`.
+2.  Return `false`.
+
 #### `const generator = resolve.packageExports(packageURL, subpath, exports[, options])`
 
+1.  If `subpath` is `.`:
+    1.  Let `mainExport` be `undefined`.
+    2.  If `exports` is a string or an array:
+        1.  Set `mainExport` to `exports`.
+    3.  If `exports` is a non-`null` object:
+        1.  If some keys of `exports` start with `.`:
+            1.  If `.` is a key of `exports`:
+                1.  Set `mainExport` to `exports['.']`.
+        2.  Otherwise:
+            1.  Set `mainExport` to `exports`.
+    4.  If `mainExport` is not `undefined`:
+        1.  If `packageTarget(packageURL, mainExport, null, false, options)` returns `true`:
+            1.  Return `true`.
+2.  Otherwise, if `exports` is a non-`null` object:
+    1.  If every key of `exports` starts with `.`:
+        1.  If `packageImportsExports(subpath, exports, packageURL, false, options)` returns `true`:
+            1.  Return `true`.
+3. Throw.
+
 #### `const generator = resolve.packageImports(specifier, parentURL[, options])`
+
+1.  If `specifier` is `#` or starts with `#/`, throw.
+2.  For each `packageURL` of `lookupPackageScope(parentURL)`:
+    1.  Let `info` be the result of yielding `packageURL`.
+    2.  If `info` is not `null`:
+        1.  If `info.imports` is set:
+            1.  If `packageImportsExports(specifier, info.imports, packageURL, true, options)` returns `true`:
+                1.  Return `true`.
+        2.  If specifier starts with `#`, throw.
+        3.  Return `false`.
+3.  Return `false`.
 
 #### `const generator = resolve.packageImportsExports(matchKey, matchObject, packageURL, isImports[, options])`
 
