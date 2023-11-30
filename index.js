@@ -127,7 +127,7 @@ exports.package = function * (packageSpecifier, parentURL, opts = {}) {
       }
 
       if (packageSubpath === '.') {
-        if (typeof info.main === 'string' && info.main) {
+        if (typeof info.main === 'string' && info.main !== '') {
           packageSubpath = info.main
         } else {
           return yield * exports.file('index', packageURL, true, opts)
@@ -140,15 +140,7 @@ exports.package = function * (packageSpecifier, parentURL, opts = {}) {
         yielded = true
       }
 
-      let packageIndex
-
-      if (packageSubpath[packageSubpath.length - 1] === '/') {
-        packageIndex = packageSubpath + 'index'
-      } else {
-        packageIndex = packageSubpath + '/index'
-      }
-
-      if (yield * exports.file(packageIndex, packageURL, true, opts)) {
+      if (yield * exports.directory(packageSubpath, packageURL, opts)) {
         yielded = true
       }
 
@@ -374,7 +366,7 @@ exports.directory = function * (dirname, parentURL, opts = {}) {
       return yield * exports.packageExports(parentURL, '.', info.exports, opts)
     }
 
-    if (typeof info.main === 'string' && info.main) {
+    if (typeof info.main === 'string' && info.main !== '') {
       let yielded = false
 
       if (yield * exports.file(info.main, parentURL, false, opts)) {

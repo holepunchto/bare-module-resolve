@@ -99,7 +99,55 @@ Options are the same as `resolve()` for all functions.
 
 #### `const generator = resolve.module(specifier, parentURL[, options])`
 
+1.  If `options.imports` is set:
+    1.  If `packageImportsExports(specifier, options.imports, parentURL, options)` returns `true`:
+        1.  Return `true`.
+2.  If `packageImports(specifier, parentURL, options)` returns `true`:
+    1.  Return `true`.
+3.  If `specifier` equals `.` or `..`, or if `specifier` starts with `/`, `./`, or `../`:
+    1.  Let `yielded` be `false`.
+    2.  If `file(specifier, parentURL, false, options)` returns `true`:
+        1.  Set `yielded` to `true`.
+    3.  If `directory(specifier, parentURL, options)` returns `true`:
+        1.  Set `yielded` to `true`.
+    4.  Return `yielded`.
+4.  Return `package(specifier, parentURL, options)`.
+
 #### `const generator = resolve.package(packageSpecifier, parentURL[, options])`
+
+1.  Let `packageName` be `undefined`.
+2.  If `packageSpecifier` is the empty string, throw.
+3.  If `options.builtins` includes `packageSpecifier`:
+    1.  Yield `'builtin:'` concatenated with `packageSpecifier` and return `true`.
+4.  If `packageSpecifier` does not start with `@`:
+    1.  Set `packageName` to the substring of `packageSpecifier` until the first `/` or the end of the string.
+5.  Otherwise:
+    1.  If `packageSpecifier` does not include `/`, throw.
+    2.  Set `packageName` to the substring of `packageSpecifier` until the second `/` or the end of the string.
+6.  If `packageName` starts with `.` or includes `\` or `%`, throw.
+7.  Let `packageSubpath` be `.` concatenated with the substring of `packageSpecifier` from the position at the length of `packageName`.
+8.  If `packageSelf(packageName, packageSubpath, parentURL, options)` returns `true`:
+    1.  Return `true`.
+9.  Repeat:
+    1.  Let `packageURL` be the resolution of `node_modules/` concatenated with `packageName` and `/` relative to `parentURL`.
+    2.  Set `parentURL` to the substring of `parentURL` until the last `/`.
+    3.  Let `info` be the result of yielding the resolution of `package.json` relative to `packageURL`.
+    4.  If `info` is not `null`:
+        1.  If `info.exports` is set:
+            1.  Return `packageExports(packageURL, packageSubpath, info.exports, options)`.
+        2.  If `packageSubpath` is `.`:
+            1.  If `info.main` is a non-empty string:
+                1.  Set `packageSubpath` to `info.main`.
+            2.  Otherwise:
+                1.  Return `file('index', packageURL, true, options)`.
+        3.  Let `yielded` be `false`.
+            1.  If `file(packageSubpath, packageURL, false, options)` returns `true`:
+                1.  Set `yielded` to `true`.
+            2.  If `directory(packageSubpath, packageURL, options)` returns `true`:
+                1.  Set `yielded` to `true`.
+            3.  Return `yielded`.
+    5.  If `parentURL` is the file system root:
+        1. Return `false`.
 
 #### `const generator = resolve.packageSelf(packageName, packageSubpath, parentURL[, options])`
 

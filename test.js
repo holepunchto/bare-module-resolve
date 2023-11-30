@@ -839,7 +839,7 @@ test('package.json#imports with private expansion key', (t) => {
   t.alike(result, ['file:///a/b/d/f/g.js'])
 })
 
-test('package.json#main with trailing slash', (t) => {
+test('package.json#main in scope with trailing slash', (t) => {
   function readPackage (url) {
     if (decodeURIComponent(url.href) === 'file:///a/b/d/package.json') {
       return {
@@ -860,6 +860,28 @@ test('package.json#main with trailing slash', (t) => {
     'file:///a/b/d',
     'file:///a/b/d.js',
     'file:///a/b/d/e/index.js'
+  ])
+})
+
+test('package.json#main in module with trailing slash', (t) => {
+  function readPackage (url) {
+    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        main: 'e/'
+      }
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
+    result.push(decodeURIComponent(resolution.href))
+  }
+
+  t.alike(result, [
+    'file:///a/b/node_modules/d/e/index.js'
   ])
 })
 
