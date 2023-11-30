@@ -916,6 +916,34 @@ test('async package reads', async (t) => {
   t.alike(result, ['file:///a/b/node_modules/d/index.js'])
 })
 
+test('imports override with bare specifier', (t) => {
+  const imports = {
+    d: './e.js'
+  }
+
+  const result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { imports }, noPackage)) {
+    result.push(decodeURIComponent(resolution.href))
+  }
+
+  t.alike(result, ['file:///a/b/e.js'])
+})
+
+test('imports override with relative specifier', (t) => {
+  const imports = {
+    './d': './e.js'
+  }
+
+  const result = []
+
+  for (const resolution of resolve('./d', new URL('file:///a/b/c'), { imports }, noPackage)) {
+    result.push(decodeURIComponent(resolution.href))
+  }
+
+  t.alike(result, ['file:///a/b/e.js'])
+})
+
 function noPackage () {
   return null
 }
