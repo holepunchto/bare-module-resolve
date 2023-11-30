@@ -320,11 +320,11 @@ function * lookupPackageScope (url) {
   const scopeURL = new URL(url.href)
 
   do {
+    if (scopeURL.pathname.endsWith('/node_modules')) break
+
     yield new URL('package.json', scopeURL)
 
     scopeURL.pathname = scopeURL.pathname.substring(0, scopeURL.pathname.lastIndexOf('/'))
-
-    if (scopeURL.pathname.endsWith('/node_modules')) break
   } while (scopeURL.pathname !== '/')
 }
 

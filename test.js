@@ -944,6 +944,29 @@ test('imports override with relative specifier', (t) => {
   t.alike(result, ['file:///a/b/e.js'])
 })
 
+test('scoped package.json inside package', (t) => {
+  function readPackage (url) {
+    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/e/package.json') {
+      return {
+        main: 'f.js'
+      }
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve('./e', new URL('file:///a/b/node_modules/d/'), readPackage)) {
+    result.push(decodeURIComponent(resolution.href))
+  }
+
+  t.alike(result, [
+    'file:///a/b/node_modules/d/e',
+    'file:///a/b/node_modules/d/e/f.js'
+  ])
+})
+
 function noPackage () {
   return null
 }
