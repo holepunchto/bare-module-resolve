@@ -476,6 +476,55 @@ test('package.json#exports with expansion key', (t) => {
   t.alike(result, ['file:///a/b/node_modules/d/f/g.js'])
 })
 
+test('package.json#exports with multiple expansion key candidates', (t) => {
+  function readPackage (url) {
+    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        exports: {
+          './e/*.js': './f/*.js',
+          './e/f/*.js': './g/*.js',
+          './f/*': './h/*',
+          './f/*.js': './i/*.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  let result = []
+
+  for (const resolution of resolve('d/e/g.js', new URL('file:///a/b/c'), readPackage)) {
+    result.push(decodeURIComponent(resolution.href))
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/f/g.js'])
+
+  result = []
+
+  for (const resolution of resolve('d/e/f/h.js', new URL('file:///a/b/c'), readPackage)) {
+    result.push(decodeURIComponent(resolution.href))
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/g/h.js'])
+
+  result = []
+
+  for (const resolution of resolve('d/f/g.es', new URL('file:///a/b/c'), readPackage)) {
+    result.push(decodeURIComponent(resolution.href))
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/h/g.es'])
+
+  result = []
+
+  for (const resolution of resolve('d/f/g.js', new URL('file:///a/b/c'), readPackage)) {
+    result.push(decodeURIComponent(resolution.href))
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/i/g.js'])
+})
+
 test('package.json#exports with conditions', (t) => {
   function readPackage (url) {
     if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
