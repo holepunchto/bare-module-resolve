@@ -48,7 +48,9 @@ module.exports = exports = function resolve (specifier, parentURL, opts, readPac
 }
 
 exports.module = function * (specifier, parentURL, opts = {}) {
-  const { imports = null } = opts
+  const { resolutions = null, imports = null } = opts
+
+  if (resolutions) return yield * exports.preresolved(specifier, resolutions, parentURL, opts)
 
   if (imports) {
     if (yield * exports.packageImportsExports(specifier, imports, parentURL, true, opts)) {
@@ -75,6 +77,16 @@ exports.module = function * (specifier, parentURL, opts = {}) {
   }
 
   return yield * exports.package(specifier, parentURL, opts)
+}
+
+exports.preresolved = function * (specifier, resolutions, parentURL, opts = {}) {
+  const imports = resolutions[parentURL.href]
+
+  if (typeof imports === 'object' && imports !== null) {
+    return yield * exports.packageImportsExports(specifier, imports, parentURL, true, opts)
+  }
+
+  return false
 }
 
 exports.package = function * (packageSpecifier, parentURL, opts = {}) {
