@@ -3,7 +3,7 @@ const resolve = require('.')
 
 test('bare specifier', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {}
     }
 
@@ -13,7 +13,7 @@ test('bare specifier', (t) => {
   const result = []
 
   for (const resolution of resolve('d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/index.js'])
@@ -21,7 +21,7 @@ test('bare specifier', (t) => {
 
 test('bare specifier with subpath', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {}
     }
 
@@ -31,7 +31,7 @@ test('bare specifier with subpath', (t) => {
   const result = []
 
   for (const resolution of resolve('d/e', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, [
@@ -43,7 +43,7 @@ test('bare specifier with subpath', (t) => {
 
 test('bare specifier with subpath and extension', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {}
     }
 
@@ -53,7 +53,7 @@ test('bare specifier with subpath and extension', (t) => {
   const result = []
 
   for (const resolution of resolve('d/e.js', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, [
@@ -65,7 +65,7 @@ test('bare specifier with subpath and extension', (t) => {
 
 test('bare specifier with package.json#main', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {
         main: 'e'
       }
@@ -77,7 +77,7 @@ test('bare specifier with package.json#main', (t) => {
   const result = []
 
   for (const resolution of resolve('d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, [
@@ -89,7 +89,7 @@ test('bare specifier with package.json#main', (t) => {
 
 test('bare specifier with empty package.json#main', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {
         main: ''
       }
@@ -101,7 +101,7 @@ test('bare specifier with empty package.json#main', (t) => {
   const result = []
 
   for (const resolution of resolve('d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/index.js'])
@@ -109,7 +109,7 @@ test('bare specifier with empty package.json#main', (t) => {
 
 test('bare specifier with packge.json#imports', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {
         imports: {
           f: './g.js'
@@ -123,7 +123,7 @@ test('bare specifier with packge.json#imports', (t) => {
   const result = []
 
   for (const resolution of resolve('f', new URL('file:///a/b/node_modules/d/e.js'), { extensions: ['.js'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/g.js'])
@@ -131,7 +131,7 @@ test('bare specifier with packge.json#imports', (t) => {
 
 test('bare specifier with packge.json#imports, map to builtin', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {
         imports: {
           f: 'foo'
@@ -145,7 +145,7 @@ test('bare specifier with packge.json#imports, map to builtin', (t) => {
   const result = []
 
   for (const resolution of resolve('f', new URL('file:///a/b/node_modules/d/e.js'), { extensions: ['.js'], builtins: ['foo'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['builtin:foo'])
@@ -153,7 +153,7 @@ test('bare specifier with packge.json#imports, map to builtin', (t) => {
 
 test('bare specifier with scope', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/@s/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/@s/d/package.json') {
       return {}
     }
 
@@ -163,7 +163,7 @@ test('bare specifier with scope', (t) => {
   const result = []
 
   for (const resolution of resolve('@s/d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/@s/d/index.js'])
@@ -171,7 +171,7 @@ test('bare specifier with scope', (t) => {
 
 test('bare specifier with scope and subpath', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/@s/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/@s/d/package.json') {
       return {}
     }
 
@@ -181,7 +181,7 @@ test('bare specifier with scope and subpath', (t) => {
   const result = []
 
   for (const resolution of resolve('@s/d/e', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, [
@@ -228,7 +228,7 @@ test('bare specifier with invalid scope', (t) => {
 
 test('bare specifier with trailing slash', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {}
     }
 
@@ -238,7 +238,7 @@ test('bare specifier with trailing slash', (t) => {
   const result = []
 
   for (const resolution of resolve('d/', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/index.js'])
@@ -248,7 +248,7 @@ test('relative specifier', (t) => {
   const result = []
 
   for (const resolution of resolve('./d', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, [
@@ -262,7 +262,7 @@ test('relative specifier with no default extensions', (t) => {
   const result = []
 
   for (const resolution of resolve('./d', new URL('file:///a/b/c'), noPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/d'])
@@ -272,7 +272,7 @@ test('relative specifier with extension', (t) => {
   const result = []
 
   for (const resolution of resolve('./d.js', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, [
@@ -286,7 +286,7 @@ test('relative specifier with extension and no default extensions', (t) => {
   const result = []
 
   for (const resolution of resolve('./d.js', new URL('file:///a/b/c'), noPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/d.js'])
@@ -294,7 +294,7 @@ test('relative specifier with extension and no default extensions', (t) => {
 
 test('relative specifier with scoped package.json#main', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/d/package.json') {
+    if (url.href === 'file:///a/b/d/package.json') {
       return {
         main: 'e'
       }
@@ -306,7 +306,7 @@ test('relative specifier with scoped package.json#main', (t) => {
   const result = []
 
   for (const resolution of resolve('./d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, [
@@ -320,7 +320,7 @@ test('relative specifier with scoped package.json#main', (t) => {
 
 test('relative specifier with scoped package.json#exports', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/d/package.json') {
+    if (url.href === 'file:///a/b/d/package.json') {
       return {
         exports: './e.js'
       }
@@ -332,7 +332,7 @@ test('relative specifier with scoped package.json#exports', (t) => {
   const result = []
 
   for (const resolution of resolve('./d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, [
@@ -394,7 +394,7 @@ test('relative specifier with trailing slash', (t) => {
   const result = []
 
   for (const resolution of resolve('./d/', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/d/index.js'])
@@ -404,7 +404,7 @@ test('relative specifier, current directory', (t) => {
   const result = []
 
   for (const resolution of resolve('.', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/index.js'])
@@ -414,7 +414,7 @@ test('relative specifier, parent directory', (t) => {
   const result = []
 
   for (const resolution of resolve('..', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/index.js'])
@@ -424,7 +424,7 @@ test('absolute specifier', (t) => {
   const result = []
 
   for (const resolution of resolve('/d', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, [
@@ -438,7 +438,7 @@ test('absolute specifier with trailing slash', (t) => {
   const result = []
 
   for (const resolution of resolve('/d/', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///d/index.js'])
@@ -448,7 +448,7 @@ test('absolute specifier, root directory', (t) => {
   const result = []
 
   for (const resolution of resolve('/', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///index.js'])
@@ -456,7 +456,7 @@ test('absolute specifier, root directory', (t) => {
 
 test('package.json#exports with expansion key', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {
         exports: {
           './e/*.js': './f/*.js'
@@ -470,7 +470,7 @@ test('package.json#exports with expansion key', (t) => {
   const result = []
 
   for (const resolution of resolve('d/e/g.js', new URL('file:///a/b/c'), readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/f/g.js'])
@@ -478,7 +478,7 @@ test('package.json#exports with expansion key', (t) => {
 
 test('package.json#exports with multiple expansion key candidates', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {
         exports: {
           './e/*.js': './f/*.js',
@@ -495,7 +495,7 @@ test('package.json#exports with multiple expansion key candidates', (t) => {
   let result = []
 
   for (const resolution of resolve('d/e/g.js', new URL('file:///a/b/c'), readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/f/g.js'])
@@ -503,7 +503,7 @@ test('package.json#exports with multiple expansion key candidates', (t) => {
   result = []
 
   for (const resolution of resolve('d/e/f/h.js', new URL('file:///a/b/c'), readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/g/h.js'])
@@ -511,7 +511,7 @@ test('package.json#exports with multiple expansion key candidates', (t) => {
   result = []
 
   for (const resolution of resolve('d/f/g.es', new URL('file:///a/b/c'), readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/h/g.es'])
@@ -519,7 +519,7 @@ test('package.json#exports with multiple expansion key candidates', (t) => {
   result = []
 
   for (const resolution of resolve('d/f/g.js', new URL('file:///a/b/c'), readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/i/g.js'])
@@ -527,7 +527,7 @@ test('package.json#exports with multiple expansion key candidates', (t) => {
 
 test('package.json#exports with conditions', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {
         exports: {
           require: './e.cjs',
@@ -543,7 +543,7 @@ test('package.json#exports with conditions', (t) => {
   let result = []
 
   for (const resolution of resolve('d', new URL('file:///a/b/c'), { conditions: ['require'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/e.cjs'])
@@ -551,7 +551,7 @@ test('package.json#exports with conditions', (t) => {
   result = []
 
   for (const resolution of resolve('d', new URL('file:///a/b/c'), { conditions: ['import'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/e.mjs'])
@@ -559,7 +559,7 @@ test('package.json#exports with conditions', (t) => {
   result = []
 
   for (const resolution of resolve('d', new URL('file:///a/b/c'), readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/e.js'])
@@ -567,7 +567,7 @@ test('package.json#exports with conditions', (t) => {
 
 test('package.json#exports with conditions and array targets', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {
         exports: [
           {
@@ -585,7 +585,7 @@ test('package.json#exports with conditions and array targets', (t) => {
   let result = []
 
   for (const resolution of resolve('d', new URL('file:///a/b/c'), { conditions: ['require'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/e.cjs'])
@@ -593,7 +593,7 @@ test('package.json#exports with conditions and array targets', (t) => {
   result = []
 
   for (const resolution of resolve('d', new URL('file:///a/b/c'), { conditions: ['import'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/e.mjs'])
@@ -601,7 +601,7 @@ test('package.json#exports with conditions and array targets', (t) => {
   result = []
 
   for (const resolution of resolve('d', new URL('file:///a/b/c'), readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/e.js'])
@@ -609,7 +609,7 @@ test('package.json#exports with conditions and array targets', (t) => {
 
 test('package.json#exports with conditions and array targets with no match', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {
         exports: [
           {
@@ -637,7 +637,7 @@ test('package.json#exports with conditions and array targets with no match', (t)
 
 test('package.json#exports with conditions and subpath', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {
         exports: {
           './e': {
@@ -655,7 +655,7 @@ test('package.json#exports with conditions and subpath', (t) => {
   let result = []
 
   for (const resolution of resolve('d/e', new URL('file:///a/b/c'), { conditions: ['require'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/e.cjs'])
@@ -663,7 +663,7 @@ test('package.json#exports with conditions and subpath', (t) => {
   result = []
 
   for (const resolution of resolve('d/e', new URL('file:///a/b/c'), { conditions: ['import'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/e.mjs'])
@@ -671,7 +671,7 @@ test('package.json#exports with conditions and subpath', (t) => {
   result = []
 
   for (const resolution of resolve('d/e', new URL('file:///a/b/c'), readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/e.js'])
@@ -679,7 +679,7 @@ test('package.json#exports with conditions and subpath', (t) => {
 
 test('package.json#exports with self reference', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/d/package.json') {
+    if (url.href === 'file:///a/b/d/package.json') {
       return {
         name: 'd',
         exports: './e.js'
@@ -692,7 +692,7 @@ test('package.json#exports with self reference', (t) => {
   const result = []
 
   for (const resolution of resolve('d', new URL('file:///a/b/d/'), readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, [
@@ -702,7 +702,7 @@ test('package.json#exports with self reference', (t) => {
 
 test('package.json#exports with self reference and name mismatch', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/d/package.json') {
+    if (url.href === 'file:///a/b/d/package.json') {
       return {
         name: 'e',
         exports: './e.js'
@@ -715,7 +715,7 @@ test('package.json#exports with self reference and name mismatch', (t) => {
   const result = []
 
   for (const resolution of resolve('d', new URL('file:///a/b/d/'), readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, [])
@@ -723,7 +723,7 @@ test('package.json#exports with self reference and name mismatch', (t) => {
 
 test('package.json#exports with unexported subpath', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {
         exports: {
           '.': './e.js',
@@ -749,7 +749,7 @@ test('package.json#exports with unexported subpath', (t) => {
 
 test('package.json#exports with invalid target', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {
         exports: {
           '.': 'e.js',
@@ -775,7 +775,7 @@ test('package.json#exports with invalid target', (t) => {
 
 test('package.json#imports with expansion key', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/d/package.json') {
+    if (url.href === 'file:///a/b/d/package.json') {
       return {
         imports: {
           './e/*.js': './f/*.js'
@@ -789,7 +789,7 @@ test('package.json#imports with expansion key', (t) => {
   const result = []
 
   for (const resolution of resolve('./e/g.js', new URL('file:///a/b/d/'), readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/d/f/g.js'])
@@ -797,7 +797,7 @@ test('package.json#imports with expansion key', (t) => {
 
 test('package.json#imports with private key', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/d/package.json') {
+    if (url.href === 'file:///a/b/d/package.json') {
       return {
         imports: {
           '#e': './e.js'
@@ -811,7 +811,7 @@ test('package.json#imports with private key', (t) => {
   const result = []
 
   for (const resolution of resolve('#e', new URL('file:///a/b/d/'), readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/d/e.js'])
@@ -819,7 +819,7 @@ test('package.json#imports with private key', (t) => {
 
 test('package.json#imports with private key and no match', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/d/package.json') {
+    if (url.href === 'file:///a/b/d/package.json') {
       return {
         imports: {
           '#e': './e.js'
@@ -868,7 +868,7 @@ test('package.json#imports with invalid key', (t) => {
 
 test('package.json#imports with private expansion key', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/d/package.json') {
+    if (url.href === 'file:///a/b/d/package.json') {
       return {
         imports: {
           '#e/*.js': './f/*.js'
@@ -882,7 +882,7 @@ test('package.json#imports with private expansion key', (t) => {
   const result = []
 
   for (const resolution of resolve('#e/g.js', new URL('file:///a/b/d/'), readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/d/f/g.js'])
@@ -890,7 +890,7 @@ test('package.json#imports with private expansion key', (t) => {
 
 test('package.json#main in scope with trailing slash', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/d/package.json') {
+    if (url.href === 'file:///a/b/d/package.json') {
       return {
         main: 'e/'
       }
@@ -902,7 +902,7 @@ test('package.json#main in scope with trailing slash', (t) => {
   const result = []
 
   for (const resolution of resolve('./d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, [
@@ -914,7 +914,7 @@ test('package.json#main in scope with trailing slash', (t) => {
 
 test('package.json#main in module with trailing slash', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {
         main: 'e/'
       }
@@ -926,7 +926,7 @@ test('package.json#main in module with trailing slash', (t) => {
   const result = []
 
   for (const resolution of resolve('d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, [
@@ -949,7 +949,7 @@ test('empty specifier', (t) => {
 
 test('async package reads', async (t) => {
   async function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
       return {}
     }
 
@@ -959,7 +959,7 @@ test('async package reads', async (t) => {
   const result = []
 
   for await (const resolution of resolve('d', new URL('file:///a/b/c'), { extensions: ['.js'] }, readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/index.js'])
@@ -973,7 +973,7 @@ test('imports override with bare specifier', (t) => {
   const result = []
 
   for (const resolution of resolve('d', new URL('file:///a/b/c'), { imports }, noPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/e.js'])
@@ -987,7 +987,7 @@ test('imports override with relative specifier', (t) => {
   const result = []
 
   for (const resolution of resolve('./d', new URL('file:///a/b/c'), { imports }, noPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, ['file:///a/b/e.js'])
@@ -995,7 +995,7 @@ test('imports override with relative specifier', (t) => {
 
 test('scoped package.json inside package', (t) => {
   function readPackage (url) {
-    if (decodeURIComponent(url.href) === 'file:///a/b/node_modules/d/e/package.json') {
+    if (url.href === 'file:///a/b/node_modules/d/e/package.json') {
       return {
         main: 'f.js'
       }
@@ -1007,7 +1007,7 @@ test('scoped package.json inside package', (t) => {
   const result = []
 
   for (const resolution of resolve('./e', new URL('file:///a/b/node_modules/d/'), readPackage)) {
-    result.push(decodeURIComponent(resolution.href))
+    result.push(resolution.href)
   }
 
   t.alike(result, [
