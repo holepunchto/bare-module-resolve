@@ -950,7 +950,23 @@ test('resolutions map with bare specifier', (t) => {
   t.alike(result, ['file:///a/b/e.js'])
 })
 
-test('resolutions map expansion key', (t) => {
+test('resolutions map with relative specifier', (t) => {
+  const resolutions = {
+    'file:///a/b/c': {
+      './d': './e.js'
+    }
+  }
+
+  const result = []
+
+  for (const resolution of resolve('./d', new URL('file:///a/b/c'), { resolutions }, noPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/e.js'])
+})
+
+test('resolutions map with expansion key', (t) => {
   const resolutions = {
     'file:///a/b/c': {
       './*': './*.js'
