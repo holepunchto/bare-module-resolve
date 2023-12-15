@@ -934,6 +934,54 @@ test('package.json#main in module with trailing slash', (t) => {
   ])
 })
 
+test('resolutions map with bare specifier', (t) => {
+  const resolutions = {
+    'file:///a/b/c': {
+      d: './e.js'
+    }
+  }
+
+  const result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { resolutions }, noPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/e.js'])
+})
+
+test('resolutions map with relative specifier', (t) => {
+  const resolutions = {
+    'file:///a/b/c': {
+      './d': './e.js'
+    }
+  }
+
+  const result = []
+
+  for (const resolution of resolve('./d', new URL('file:///a/b/c'), { resolutions }, noPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/e.js'])
+})
+
+test('resolutions map with expansion key', (t) => {
+  const resolutions = {
+    'file:///a/b/c': {
+      './*': './*.js'
+    }
+  }
+
+  const result = []
+
+  for (const resolution of resolve('./d', new URL('file:///a/b/c'), { resolutions }, noPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/d.js'])
+})
+
 test('empty specifier', (t) => {
   try {
     for (const resolution of resolve('', new URL('file:///a/b/c'), noPackage)) {

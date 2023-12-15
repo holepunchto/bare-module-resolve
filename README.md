@@ -48,7 +48,7 @@ Options include:
 {
   // An additional "imports" map to apply to all specifiers. Follows the same
   // syntax and rules as the "imports" property defined in `package.json`.
-  imports: null,
+  imports,
   // A list of builtin module specifiers. If matched, the protocol of the
   // resolved URL will be `builtin:`.
   builtins: [],
@@ -57,7 +57,10 @@ Options include:
   // The file extensions to look for. Must be provided to support extensionless
   // specifier resolution and directory support, such as resolving './foo' to
   // './foo.js' or './foo/index.js'.
-  extensions: []
+  extensions: [],
+  // A map of preresolved imports with keys being serialized parent URLs and
+  // values being "imports" maps.
+  resolutions
 }
 ```
 
@@ -99,19 +102,28 @@ Options are the same as `resolve()` for all functions.
 
 #### `const generator = resolve.module(specifier, parentURL[, options])`
 
-1.  If `options.imports` is set:
-    1.  If `packageImportsExports(specifier, options.imports, parentURL, options)` returns `true`:
+1.  If `options.resolutions` is set:
+    1.  Return `preresolved(specifier, options.resolutions, parentURL, options)`
+2.  If `options.imports` is set:
+    1.  If `packageImportsExports(specifier, options.imports, parentURL, true, options)` returns `true`:
         1.  Return `true`.
-2.  If `packageImports(specifier, parentURL, options)` returns `true`:
+3.  If `packageImports(specifier, parentURL, options)` returns `true`:
     1.  Return `true`.
-3.  If `specifier` equals `.` or `..`, or if `specifier` starts with `/`, `./`, or `../`:
+4.  If `specifier` equals `.` or `..`, or if `specifier` starts with `/`, `./`, or `../`:
     1.  Let `yielded` be `false`.
     2.  If `file(specifier, parentURL, false, options)` returns `true`:
         1.  Set `yielded` to `true`.
     3.  If `directory(specifier, parentURL, options)` returns `true`:
         1.  Set `yielded` to `true`.
     4.  Return `yielded`.
-4.  Return `package(specifier, parentURL, options)`.
+5.  Return `package(specifier, parentURL, options)`.
+
+#### `const generator = resolve.preresolved(specifier, resolutions, parentURL[, options])`
+
+1.  Let `imports` be `resolutions[parentURL]`.
+2.  If `imports` is a non-`null` object:
+    1.  Return `packageImportsExports(specifier, imports, parentURL, true, options)`
+3.  Return `false`.
 
 #### `const generator = resolve.package(packageSpecifier, parentURL[, options])`
 
