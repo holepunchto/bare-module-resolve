@@ -4,6 +4,8 @@ module.exports = exports = function resolve (specifier, parentURL, opts, readPac
   if (typeof opts === 'function') {
     readPackage = opts
     opts = {}
+  } else if (typeof readPackage !== 'function') {
+    readPackage = defaultReadPackage
   }
 
   return {
@@ -45,6 +47,10 @@ module.exports = exports = function resolve (specifier, parentURL, opts, readPac
       return next.value
     }
   }
+}
+
+function defaultReadPackage () {
+  return null
 }
 
 exports.module = function * (specifier, parentURL, opts = {}) {

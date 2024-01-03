@@ -193,7 +193,7 @@ test('bare specifier with scope and subpath', (t) => {
 
 test('bare specifier with invalid scope', (t) => {
   try {
-    for (const resolution of resolve('@s', new URL('file:///a/b/c'), noPackage)) {
+    for (const resolution of resolve('@s', new URL('file:///a/b/c'))) {
       t.absent(resolution)
     }
 
@@ -204,7 +204,7 @@ test('bare specifier with invalid scope', (t) => {
   }
 
   try {
-    for (const resolution of resolve('@s/d\\', new URL('file:///a/b/c'), noPackage)) {
+    for (const resolution of resolve('@s/d\\', new URL('file:///a/b/c'))) {
       t.absent(resolution)
     }
 
@@ -215,7 +215,7 @@ test('bare specifier with invalid scope', (t) => {
   }
 
   try {
-    for (const resolution of resolve('@s/d%', new URL('file:///a/b/c'), noPackage)) {
+    for (const resolution of resolve('@s/d%', new URL('file:///a/b/c'))) {
       t.absent(resolution)
     }
 
@@ -247,7 +247,7 @@ test('bare specifier with trailing slash', (t) => {
 test('relative specifier', (t) => {
   const result = []
 
-  for (const resolution of resolve('./d', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
+  for (const resolution of resolve('./d', new URL('file:///a/b/c'), { extensions: ['.js'] })) {
     result.push(resolution.href)
   }
 
@@ -261,7 +261,7 @@ test('relative specifier', (t) => {
 test('relative specifier with no default extensions', (t) => {
   const result = []
 
-  for (const resolution of resolve('./d', new URL('file:///a/b/c'), noPackage)) {
+  for (const resolution of resolve('./d', new URL('file:///a/b/c'))) {
     result.push(resolution.href)
   }
 
@@ -271,7 +271,7 @@ test('relative specifier with no default extensions', (t) => {
 test('relative specifier with extension', (t) => {
   const result = []
 
-  for (const resolution of resolve('./d.js', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
+  for (const resolution of resolve('./d.js', new URL('file:///a/b/c'), { extensions: ['.js'] })) {
     result.push(resolution.href)
   }
 
@@ -285,7 +285,7 @@ test('relative specifier with extension', (t) => {
 test('relative specifier with extension and no default extensions', (t) => {
   const result = []
 
-  for (const resolution of resolve('./d.js', new URL('file:///a/b/c'), noPackage)) {
+  for (const resolution of resolve('./d.js', new URL('file:///a/b/c'))) {
     result.push(resolution.href)
   }
 
@@ -344,7 +344,7 @@ test('relative specifier with scoped package.json#exports', (t) => {
 
 test('relative specifier with percent encoded /', async (t) => {
   try {
-    for (const resolution of resolve('./d%2fe', new URL('file:///a/b/c'), noPackage)) {
+    for (const resolution of resolve('./d%2fe', new URL('file:///a/b/c'))) {
       t.absent(resolution)
     }
 
@@ -355,7 +355,7 @@ test('relative specifier with percent encoded /', async (t) => {
   }
 
   try {
-    for (const resolution of resolve('./d%2Fe', new URL('file:///a/b/c'), noPackage)) {
+    for (const resolution of resolve('./d%2Fe', new URL('file:///a/b/c'))) {
       t.absent(resolution)
     }
 
@@ -368,7 +368,7 @@ test('relative specifier with percent encoded /', async (t) => {
 
 test('relative specifier with percent encoded \\', async (t) => {
   try {
-    for (const resolution of resolve('./d%5ce', new URL('file:///a/b/c'), noPackage)) {
+    for (const resolution of resolve('./d%5ce', new URL('file:///a/b/c'))) {
       t.absent(resolution)
     }
 
@@ -379,7 +379,7 @@ test('relative specifier with percent encoded \\', async (t) => {
   }
 
   try {
-    for (const resolution of resolve('./d%5Ce', new URL('file:///a/b/c'), noPackage)) {
+    for (const resolution of resolve('./d%5Ce', new URL('file:///a/b/c'))) {
       t.absent(resolution)
     }
 
@@ -393,7 +393,7 @@ test('relative specifier with percent encoded \\', async (t) => {
 test('relative specifier with trailing slash', (t) => {
   const result = []
 
-  for (const resolution of resolve('./d/', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
+  for (const resolution of resolve('./d/', new URL('file:///a/b/c'), { extensions: ['.js'] })) {
     result.push(resolution.href)
   }
 
@@ -403,7 +403,7 @@ test('relative specifier with trailing slash', (t) => {
 test('relative specifier, current directory', (t) => {
   const result = []
 
-  for (const resolution of resolve('.', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
+  for (const resolution of resolve('.', new URL('file:///a/b/c'), { extensions: ['.js'] })) {
     result.push(resolution.href)
   }
 
@@ -413,7 +413,7 @@ test('relative specifier, current directory', (t) => {
 test('relative specifier, parent directory', (t) => {
   const result = []
 
-  for (const resolution of resolve('..', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
+  for (const resolution of resolve('..', new URL('file:///a/b/c'), { extensions: ['.js'] })) {
     result.push(resolution.href)
   }
 
@@ -423,7 +423,7 @@ test('relative specifier, parent directory', (t) => {
 test('absolute specifier', (t) => {
   const result = []
 
-  for (const resolution of resolve('/d', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
+  for (const resolution of resolve('/d', new URL('file:///a/b/c'), { extensions: ['.js'] })) {
     result.push(resolution.href)
   }
 
@@ -437,7 +437,7 @@ test('absolute specifier', (t) => {
 test('absolute specifier with trailing slash', (t) => {
   const result = []
 
-  for (const resolution of resolve('/d/', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
+  for (const resolution of resolve('/d/', new URL('file:///a/b/c'), { extensions: ['.js'] })) {
     result.push(resolution.href)
   }
 
@@ -447,7 +447,7 @@ test('absolute specifier with trailing slash', (t) => {
 test('absolute specifier, root directory', (t) => {
   const result = []
 
-  for (const resolution of resolve('/', new URL('file:///a/b/c'), { extensions: ['.js'] }, noPackage)) {
+  for (const resolution of resolve('/', new URL('file:///a/b/c'), { extensions: ['.js'] })) {
     result.push(resolution.href)
   }
 
@@ -844,7 +844,7 @@ test('package.json#imports with private key and no match', (t) => {
 
 test('package.json#imports with invalid key', (t) => {
   try {
-    for (const resolution of resolve('#', new URL('file:///a/b/c'), noPackage)) {
+    for (const resolution of resolve('#', new URL('file:///a/b/c'))) {
       t.absent(resolution)
     }
 
@@ -855,7 +855,7 @@ test('package.json#imports with invalid key', (t) => {
   }
 
   try {
-    for (const resolution of resolve('#/e', new URL('file:///a/b/c'), noPackage)) {
+    for (const resolution of resolve('#/e', new URL('file:///a/b/c'))) {
       t.absent(resolution)
     }
 
@@ -943,7 +943,7 @@ test('resolutions map with bare specifier', (t) => {
 
   const result = []
 
-  for (const resolution of resolve('d', new URL('file:///a/b/c'), { resolutions }, noPackage)) {
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { resolutions })) {
     result.push(resolution.href)
   }
 
@@ -959,7 +959,7 @@ test('resolutions map with relative specifier', (t) => {
 
   const result = []
 
-  for (const resolution of resolve('./d', new URL('file:///a/b/c'), { resolutions }, noPackage)) {
+  for (const resolution of resolve('./d', new URL('file:///a/b/c'), { resolutions })) {
     result.push(resolution.href)
   }
 
@@ -975,7 +975,7 @@ test('resolutions map with expansion key', (t) => {
 
   const result = []
 
-  for (const resolution of resolve('./d', new URL('file:///a/b/c'), { resolutions }, noPackage)) {
+  for (const resolution of resolve('./d', new URL('file:///a/b/c'), { resolutions })) {
     result.push(resolution.href)
   }
 
@@ -984,7 +984,7 @@ test('resolutions map with expansion key', (t) => {
 
 test('empty specifier', (t) => {
   try {
-    for (const resolution of resolve('', new URL('file:///a/b/c'), noPackage)) {
+    for (const resolution of resolve('', new URL('file:///a/b/c'))) {
       t.absent(resolution)
     }
 
@@ -1020,7 +1020,7 @@ test('imports override with bare specifier', (t) => {
 
   const result = []
 
-  for (const resolution of resolve('d', new URL('file:///a/b/c'), { imports }, noPackage)) {
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { imports })) {
     result.push(resolution.href)
   }
 
@@ -1034,7 +1034,7 @@ test('imports override with relative specifier', (t) => {
 
   const result = []
 
-  for (const resolution of resolve('./d', new URL('file:///a/b/c'), { imports }, noPackage)) {
+  for (const resolution of resolve('./d', new URL('file:///a/b/c'), { imports })) {
     result.push(resolution.href)
   }
 
@@ -1063,7 +1063,3 @@ test('scoped package.json inside package', (t) => {
     'file:///a/b/node_modules/d/e/f.js'
   ])
 })
-
-function noPackage () {
-  return null
-}

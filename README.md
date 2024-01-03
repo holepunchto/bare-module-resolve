@@ -38,7 +38,7 @@ for await (const resolution of resolve('./file.js', new URL('file:///directory/'
 
 ## API
 
-#### `const resolver = resolve(specifier, parentURL[, options], readPackage)`
+#### `const resolver = resolve(specifier, parentURL[, options][, readPackage])`
 
 Resolve `specifier` relative to `parentURL`, which must be a WHATWG `URL` instance. `readPackage` is called with a `URL` instance for every package manifest to be read and must either return the parsed JSON package manifest, if it exists, or `null`. If `readPackage` returns a promise, synchronous iteration is not supported.
 
