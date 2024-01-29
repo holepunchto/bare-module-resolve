@@ -111,14 +111,22 @@ Options are the same as `resolve()` for all functions.
         1.  Return `true`.
 3.  If `packageImports(specifier, parentURL, options)` returns `true`:
     1.  Return `true`.
-4.  If `specifier` equals `.` or `..`, or if `specifier` starts with `/`, `./`, or `../`:
+4.  If `url(specifier, options)` returns `true`:
+    1.  Return `true`.
+5.  If `specifier` equals `.` or `..`, or if `specifier` starts with `/`, `./`, or `../`:
     1.  Let `yielded` be `false`.
     2.  If `file(specifier, parentURL, false, options)` returns `true`:
         1.  Set `yielded` to `true`.
     3.  If `directory(specifier, parentURL, options)` returns `true`:
         1.  Set `yielded` to `true`.
     4.  Return `yielded`.
-5.  Return `package(specifier, parentURL, options)`.
+6.  Return `package(specifier, parentURL, options)`.
+
+#### `const generator = resolve.url(url[, options])`
+
+1.  If `url` is a valid URL:
+    1.  Yield `url` and return `true`.
+2.  Return `false`.
 
 #### `const generator = resolve.preresolved(specifier, resolutions, parentURL[, options])`
 
@@ -229,9 +237,11 @@ Options are the same as `resolve()` for all functions.
     1.  If `target` does not start with `./` and `isImports` is `false`, throw.
     2.  If `patternMatch` is not `null`:
         1.  Replace every instance of `*` in `target` with `patternMatch`.
-    3.  If `target` equals `.` or `..`, or if `target` starts with `/`, `./`, or `../`:
+    3.  If `url(target, options)` returns `true`:
+        1.  Return `true`.
+    4.  If `target` equals `.` or `..`, or if `target` starts with `/`, `./`, or `../`:
         1.  Yield the resolution of `target` relative to `packageURL` and return `true`.
-    4.  Return `package(target, packageURL, options)`.
+    5.  Return `package(target, packageURL, options)`.
 2.  If `target` is an array:
     1.  For each value `targetValue` of `target`:
         1.  If `packageTarget(packageURL, targetValue, patternMatch, isImports, options)` returns `true`:

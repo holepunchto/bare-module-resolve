@@ -68,6 +68,10 @@ exports.module = function * (specifier, parentURL, opts = {}) {
     return true
   }
 
+  if (yield * exports.url(specifier, opts)) {
+    return true
+  }
+
   if (specifier === '.' || specifier === '..' || specifier[0] === '/' || specifier.startsWith('./') || specifier.startsWith('../')) {
     let yielded = false
 
@@ -83,6 +87,16 @@ exports.module = function * (specifier, parentURL, opts = {}) {
   }
 
   return yield * exports.package(specifier, parentURL, opts)
+}
+
+exports.url = function * (url, opts = {}) {
+  try {
+    yield { module: new URL(url) }
+
+    return true
+  } catch {
+    return false
+  }
 }
 
 exports.preresolved = function * (specifier, resolutions, parentURL, opts = {}) {
@@ -302,6 +316,10 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
 
     if (patternMatch !== null) {
       target = target.replaceAll('*', patternMatch)
+    }
+
+    if (yield * exports.url(target, opts)) {
+      return true
     }
 
     if (target === '.' || target === '..' || target[0] === '/' || target.startsWith('./') || target.startsWith('../')) {
