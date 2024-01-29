@@ -96,7 +96,7 @@ exports.preresolved = function * (specifier, resolutions, parentURL, opts = {}) 
 }
 
 exports.package = function * (packageSpecifier, parentURL, opts = {}) {
-  const { builtins = [] } = opts
+  const { builtins = [], builtinProtocol = 'builtin:' } = opts
 
   let packageName
 
@@ -105,7 +105,7 @@ exports.package = function * (packageSpecifier, parentURL, opts = {}) {
   }
 
   if (builtins.includes(packageSpecifier)) {
-    yield { module: new URL('builtin:' + packageSpecifier) }
+    yield { module: new URL(builtinProtocol + packageSpecifier) }
 
     return true
   }
@@ -276,7 +276,7 @@ exports.packageImportsExports = function * (matchKey, matchObject, packageURL, i
   return false
 }
 
-function patternKeyCompare (keyA, keyB) {
+exports.patternKeyCompare = function patternKeyCompare (keyA, keyB) {
   const patternIndexA = keyA.indexOf('*')
   const patternIndexB = keyB.indexOf('*')
   const baseLengthA = patternIndexA === -1 ? keyA.length : patternIndexA + 1
@@ -334,7 +334,7 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
   return false
 }
 
-function * lookupPackageScope (url) {
+exports.lookupPackageScope = function * lookupPackageScope (url) {
   const scopeURL = new URL(url.href)
 
   do {

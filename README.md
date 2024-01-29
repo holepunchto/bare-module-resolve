@@ -50,8 +50,10 @@ Options include:
   // syntax and rules as the "imports" property defined in `package.json`.
   imports,
   // A list of builtin module specifiers. If matched, the protocol of the
-  // resolved URL will be `builtin:`.
+  // resolved URL will be `builtinProtocol`.
   builtins: [],
+  // The protocol to use for resolved builtin module specifiers.
+  builtinProtocol: 'builtin:',
   // The supported import conditions. "default" is always recognized.
   conditions: [],
   // The file extensions to look for. Must be provided to support extensionless
@@ -130,7 +132,7 @@ Options are the same as `resolve()` for all functions.
 1.  Let `packageName` be `undefined`.
 2.  If `packageSpecifier` is the empty string, throw.
 3.  If `options.builtins` includes `packageSpecifier`:
-    1.  Yield `'builtin:'` concatenated with `packageSpecifier` and return `true`.
+    1.  Yield `options.builtinProtocol` concatenated with `packageSpecifier` and return `true`.
 4.  If `packageSpecifier` does not start with `@`:
     1.  Set `packageName` to the substring of `packageSpecifier` until the first `/` or the end of the string.
 5.  Otherwise:
