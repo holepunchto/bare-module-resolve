@@ -170,7 +170,7 @@ exports.package = function * (packageSpecifier, parentURL, opts = {}) {
 }
 
 exports.packageSelf = function * (packageName, packageSubpath, parentURL, opts = {}) {
-  for (const packageURL of lookupPackageScope(parentURL)) {
+  for (const packageURL of exports.lookupPackageScope(parentURL)) {
     const info = yield { package: packageURL }
 
     if (info) {
@@ -226,7 +226,7 @@ exports.packageImports = function * (specifier, parentURL, opts = {}) {
     throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${specifier}' is not a valid internal imports specifier`)
   }
 
-  for (const packageURL of lookupPackageScope(parentURL)) {
+  for (const packageURL of exports.lookupPackageScope(parentURL)) {
     const info = yield { package: packageURL }
 
     if (info) {
@@ -254,7 +254,7 @@ exports.packageImportsExports = function * (matchKey, matchObject, packageURL, i
     return yield * exports.packageTarget(packageURL, target, null, isImports, opts)
   }
 
-  const expansionKeys = Object.keys(matchObject).filter(key => key.includes('*')).sort(patternKeyCompare)
+  const expansionKeys = Object.keys(matchObject).filter(key => key.includes('*')).sort(exports.patternKeyCompare)
 
   for (const expansionKey of expansionKeys) {
     const patternIndex = expansionKey.indexOf('*')
