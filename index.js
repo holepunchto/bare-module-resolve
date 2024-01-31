@@ -365,6 +365,8 @@ exports.lookupPackageScope = function * lookupPackageScope (url) {
     yield new URL('package.json', scopeURL)
 
     scopeURL.pathname = scopeURL.pathname.substring(0, scopeURL.pathname.lastIndexOf('/'))
+
+    if (scopeURL.pathname.length === 3 && isWindowsDriveLetter(scopeURL.pathname.substring(1))) break
   } while (scopeURL.pathname !== '/')
 }
 
