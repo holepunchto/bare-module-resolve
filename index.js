@@ -369,7 +369,7 @@ exports.lookupPackageScope = function * lookupPackageScope (url) {
 }
 
 exports.file = function * (filename, parentURL, isIndex, opts = {}) {
-  if (filename === '.' || filename === '..' || filename[filename.length - 1] === '/') return false
+  if (filename === '.' || filename === '..' || filename[filename.length - 1] === '/' || filename[filename.length - 1] === '\\') return false
 
   if (parentURL.protocol === 'file:' && /%2f|%5c/i.test(filename)) {
     throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${filename}' is invalid`)
@@ -391,7 +391,7 @@ exports.file = function * (filename, parentURL, isIndex, opts = {}) {
 exports.directory = function * (dirname, parentURL, opts = {}) {
   let directoryURL
 
-  if (dirname[dirname.length - 1] === '/') {
+  if (dirname[dirname.length - 1] === '/' || dirname[dirname.length - 1] === '\\') {
     directoryURL = new URL(dirname, parentURL)
   } else {
     directoryURL = new URL(dirname + '/', parentURL)

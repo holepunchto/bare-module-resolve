@@ -257,7 +257,7 @@ Options are the same as `resolve()` for all functions.
 
 #### `const generator = resolve.file(filename, parentURL, isIndex[, options])`
 
-1.  If `filename` equals `.` or `..`, or if `filename` ends with `/`:
+1.  If `filename` equals `.` or `..`, or if `filename` ends with `/` or `\`:
     1.  Return `false`.
 2.  If `parentURL` is a `file:` URL and `filename` includes encoded `/` or `\`, throw.
 3.  If `isIndex` is `false`:
@@ -271,7 +271,7 @@ Options are the same as `resolve()` for all functions.
 #### `const generator = resolve.directory(dirname, parentURL[, options])`
 
 1.  Let `directoryURL` be `undefined`.
-2.  If `dirname` ends with `/`:
+2.  If `dirname` ends with `/` or `\`:
     1.  Set `directoryURL` to the resolution of `dirname` relative to `parentURL`.
 3.  Otherwise:
     1.  Set `directoryURL` to the resolution of `dirname` concatenated with `/` relative to `parentURL`.
