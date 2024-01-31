@@ -104,23 +104,25 @@ Options are the same as `resolve()` for all functions.
 
 #### `const generator = resolve.module(specifier, parentURL[, options])`
 
-1.  If `options.resolutions` is set:
+1.  If `specifier` [starts with a Windows drive letter](https://url.spec.whatwg.org/#start-with-a-windows-drive-letter):
+    1.  Prepend `/` to `specifier`.
+2.  If `options.resolutions` is set:
     1.  Return `preresolved(specifier, options.resolutions, parentURL, options)`
-2.  If `options.imports` is set:
+3.  If `options.imports` is set:
     1.  If `packageImportsExports(specifier, options.imports, parentURL, true, options)` returns `true`:
         1.  Return `true`.
-3.  If `packageImports(specifier, parentURL, options)` returns `true`:
+4.  If `packageImports(specifier, parentURL, options)` returns `true`:
     1.  Return `true`.
-4.  If `url(specifier, options)` returns `true`:
+5.  If `url(specifier, options)` returns `true`:
     1.  Return `true`.
-5.  If `specifier` equals `.` or `..`, or if `specifier` starts with `/`, `./`, or `../`:
+6.  If `specifier` equals `.` or `..`, or if `specifier` starts with `/`, `\`, `./`, `.\`, `../`, or `..\`:
     1.  Let `yielded` be `false`.
     2.  If `file(specifier, parentURL, false, options)` returns `true`:
         1.  Set `yielded` to `true`.
     3.  If `directory(specifier, parentURL, options)` returns `true`:
         1.  Set `yielded` to `true`.
     4.  Return `yielded`.
-6.  Return `package(specifier, parentURL, options)`.
+7.  Return `package(specifier, parentURL, options)`.
 
 #### `const generator = resolve.url(url[, options])`
 

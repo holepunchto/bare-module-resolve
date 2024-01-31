@@ -454,6 +454,34 @@ test('absolute specifier, root directory', (t) => {
   t.alike(result, ['file:///index.js'])
 })
 
+test('absolute specifier, Windows path', (t) => {
+  const result = []
+
+  for (const resolution of resolve('\\d', new URL('file:///a/b/c'), { extensions: ['.js'] })) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [
+    'file:///d',
+    'file:///d.js',
+    'file:///d/index.js'
+  ])
+})
+
+test('absolute specifier, Windows path with drive letter', (t) => {
+  const result = []
+
+  for (const resolution of resolve('c:\\d', new URL('file:///a/b/c'), { extensions: ['.js'] })) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [
+    'file:///c:/d',
+    'file:///c:/d.js',
+    'file:///c:/d/index.js'
+  ])
+})
+
 test('package.json#exports with expansion key', (t) => {
   function readPackage (url) {
     if (url.href === 'file:///a/b/node_modules/d/package.json') {

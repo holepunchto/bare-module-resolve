@@ -56,6 +56,10 @@ function defaultReadPackage () {
 exports.module = function * (specifier, parentURL, opts = {}) {
   const { resolutions = null, imports = null } = opts
 
+  if (startsWithWindowsDriveLetter(specifier)) {
+    specifier = '/' + specifier
+  }
+
   if (resolutions) return yield * exports.preresolved(specifier, resolutions, parentURL, opts)
 
   if (imports) {
@@ -72,7 +76,7 @@ exports.module = function * (specifier, parentURL, opts = {}) {
     return true
   }
 
-  if (specifier === '.' || specifier === '..' || specifier[0] === '/' || specifier.startsWith('./') || specifier.startsWith('../')) {
+  if (specifier === '.' || specifier === '..' || specifier[0] === '/' || specifier[0] === '\\' || specifier.startsWith('./') || specifier.startsWith('.\\') || specifier.startsWith('../') || specifier.startsWith('..\\')) {
     let yielded = false
 
     if (yield * exports.file(specifier, parentURL, false, opts)) {
@@ -416,4 +420,38 @@ exports.directory = function * (dirname, parentURL, opts = {}) {
   }
 
   return yield * exports.file('index', directoryURL, true, opts)
+}
+
+// https://infra.spec.whatwg.org/#ascii-upper-alpha
+function isASCIIUpperAlpha (c) {
+  return c >= 0x41 && c <= 0x5a
+}
+
+// https://infra.spec.whatwg.org/#ascii-lower-alpha
+function isASCIILowerAlpha (c) {
+  return c >= 0x61 && c <= 0x7a
+}
+
+// https://infra.spec.whatwg.org/#ascii-alpha
+function isASCIIAlpha (c) {
+  return isASCIIUpperAlpha(c) || isASCIILowerAlpha(c)
+}
+
+// https://url.spec.whatwg.org/#windows-drive-letter
+function isWindowsDriveLetter (input) {
+  return input.length >= 2 && isASCIIAlpha(input.charCodeAt(0)) && (
+    input.charCodeAt(1) === 0x3a ||
+    input.charCodeAt(1) === 0x7c
+  )
+}
+
+// https://url.spec.whatwg.org/#start-with-a-windows-drive-letter
+function startsWithWindowsDriveLetter (input) {
+  return input.length >= 2 && isWindowsDriveLetter(input) && (
+    input.length === 2 ||
+    input.charCodeAt(2) === 0x2f ||
+    input.charCodeAt(2) === 0x5c ||
+    input.charCodeAt(2) === 0x3f ||
+    input.charCodeAt(2) === 0x23
+  )
 }
