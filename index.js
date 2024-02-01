@@ -56,7 +56,7 @@ function defaultReadPackage () {
 exports.module = function * (specifier, parentURL, opts = {}) {
   const { resolutions = null, imports = null } = opts
 
-  if (startsWithWindowsDriveLetter(specifier)) {
+  if (exports.startsWithWindowsDriveLetter(specifier)) {
     specifier = '/' + specifier
   }
 
@@ -366,7 +366,7 @@ exports.lookupPackageScope = function * lookupPackageScope (url) {
 
     scopeURL.pathname = scopeURL.pathname.substring(0, scopeURL.pathname.lastIndexOf('/'))
 
-    if (scopeURL.pathname.length === 3 && isWindowsDriveLetter(scopeURL.pathname.substring(1))) break
+    if (scopeURL.pathname.length === 3 && exports.isWindowsDriveLetter(scopeURL.pathname.substring(1))) break
   } while (scopeURL.pathname !== '/')
 }
 
@@ -440,7 +440,7 @@ function isASCIIAlpha (c) {
 }
 
 // https://url.spec.whatwg.org/#windows-drive-letter
-function isWindowsDriveLetter (input) {
+exports.isWindowsDriveLetter = function isWindowsDriveLetter (input) {
   return input.length >= 2 && isASCIIAlpha(input.charCodeAt(0)) && (
     input.charCodeAt(1) === 0x3a ||
     input.charCodeAt(1) === 0x7c
@@ -448,8 +448,8 @@ function isWindowsDriveLetter (input) {
 }
 
 // https://url.spec.whatwg.org/#start-with-a-windows-drive-letter
-function startsWithWindowsDriveLetter (input) {
-  return input.length >= 2 && isWindowsDriveLetter(input) && (
+exports.startsWithWindowsDriveLetter = function startsWithWindowsDriveLetter (input) {
+  return input.length >= 2 && exports.isWindowsDriveLetter(input) && (
     input.length === 2 ||
     input.charCodeAt(2) === 0x2f ||
     input.charCodeAt(2) === 0x5c ||
