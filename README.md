@@ -175,7 +175,7 @@ Options are the same as `resolve()` for all functions.
 
 #### `const generator = resolve.packageSelf(packageName, packageSubpath, parentURL[, options])`
 
-1.  For each value `packageURL` of `lookupPackageScope(parentURL)`:
+1.  For each value `packageURL` of `lookupPackageScope(parentURL, options)`:
     1.  Let `info` be the result of yielding `packageURL`.
     2.  If `info` is not `null`:
         1.  If `info.exports` is set and `info.name` equals `packageName`:
@@ -207,7 +207,7 @@ Options are the same as `resolve()` for all functions.
 #### `const generator = resolve.packageImports(specifier, parentURL[, options])`
 
 1.  If `specifier` is `#` or starts with `#/`, throw.
-2.  For each value `packageURL` of `lookupPackageScope(parentURL)`:
+2.  For each value `packageURL` of `lookupPackageScope(parentURL, opions)`:
     1.  Let `info` be the result of yielding `packageURL`.
     2.  If `info` is not `null`:
         1.  If `info.imports` is set:

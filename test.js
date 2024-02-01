@@ -1091,3 +1091,19 @@ test('scoped package.json inside package', (t) => {
     'file:///a/b/node_modules/d/e/f.js'
   ])
 })
+
+test('package scope lookup with resolutions map', (t) => {
+  const resolutions = {
+    'file:///a/b/c': {
+      'bare:package': 'file:///a/package.json'
+    }
+  }
+
+  const result = []
+
+  for (const scope of resolve.lookupPackageScope(new URL('file:///a/b/c'), { resolutions })) {
+    result.push(scope.href)
+  }
+
+  t.alike(result, ['file:///a/package.json'])
+})

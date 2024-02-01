@@ -188,7 +188,7 @@ exports.package = function * (packageSpecifier, parentURL, opts = {}) {
 }
 
 exports.packageSelf = function * (packageName, packageSubpath, parentURL, opts = {}) {
-  for (const packageURL of exports.lookupPackageScope(parentURL)) {
+  for (const packageURL of exports.lookupPackageScope(parentURL, opts)) {
     const info = yield { package: packageURL }
 
     if (info) {
@@ -244,7 +244,7 @@ exports.packageImports = function * (specifier, parentURL, opts = {}) {
     throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${specifier}' is not a valid internal imports specifier`)
   }
 
-  for (const packageURL of exports.lookupPackageScope(parentURL)) {
+  for (const packageURL of exports.lookupPackageScope(parentURL, opts)) {
     const info = yield { package: packageURL }
 
     if (info) {
@@ -356,7 +356,18 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
   return false
 }
 
-exports.lookupPackageScope = function * lookupPackageScope (url) {
+exports.lookupPackageScope = function * lookupPackageScope (url, opts = {}) {
+  const { resolutions = null } = opts
+
+  if (resolutions) {
+    for (const resolution of exports.preresolved('bare:package', resolutions, url, opts)) {
+      if (resolution.module) yield resolution.module
+      else break
+    }
+
+    return
+  }
+
   const scopeURL = new URL(url.href)
 
   do {
