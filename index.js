@@ -60,7 +60,11 @@ exports.module = function * (specifier, parentURL, opts = {}) {
     specifier = '/' + specifier
   }
 
-  if (resolutions) return yield * exports.preresolved(specifier, resolutions, parentURL, opts)
+  if (resolutions) {
+    if (yield * exports.preresolved(specifier, resolutions, parentURL, opts)) {
+      return true
+    }
+  }
 
   if (imports) {
     if (yield * exports.packageImportsExports(specifier, imports, parentURL, true, opts)) {
@@ -361,11 +365,9 @@ exports.lookupPackageScope = function * lookupPackageScope (url, opts = {}) {
 
   if (resolutions) {
     for (const resolution of exports.preresolved('bare:package', resolutions, url, opts)) {
-      if (resolution.module) yield resolution.module
-      else break
+      if (resolution.module) return yield resolution.module
+      break
     }
-
-    return
   }
 
   const scopeURL = new URL(url.href)

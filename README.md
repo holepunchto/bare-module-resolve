@@ -107,7 +107,8 @@ Options are the same as `resolve()` for all functions.
 1.  If `specifier` [starts with a Windows drive letter](https://url.spec.whatwg.org/#start-with-a-windows-drive-letter):
     1.  Prepend `/` to `specifier`.
 2.  If `options.resolutions` is set:
-    1.  Return `preresolved(specifier, options.resolutions, parentURL, options)`
+    1.  If `preresolved(specifier, options.resolutions, parentURL, options)` returns `true`:
+        1.  Return `true`.
 3.  If `options.imports` is set:
     1.  If `packageImportsExports(specifier, options.imports, parentURL, true, options)` returns `true`:
         1.  Return `true`.
