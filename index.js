@@ -20,7 +20,7 @@ module.exports = exports = function resolve (specifier, parentURL, opts, readPac
         if (value.package) {
           next = generator.next(readPackage(value.package))
         } else {
-          yield value.module
+          yield value.resolution
           next = generator.next()
         }
       }
@@ -39,7 +39,7 @@ module.exports = exports = function resolve (specifier, parentURL, opts, readPac
         if (value.package) {
           next = generator.next(await readPackage(value.package))
         } else {
-          yield value.module
+          yield value.resolution
           next = generator.next()
         }
       }
@@ -99,7 +99,7 @@ exports.module = function * (specifier, parentURL, opts = {}) {
 
 exports.url = function * (url, opts = {}) {
   try {
-    yield { module: new URL(url) }
+    yield { resolution: new URL(url) }
 
     return true
   } catch {
@@ -127,7 +127,7 @@ exports.package = function * (packageSpecifier, parentURL, opts = {}) {
   }
 
   if (builtins.includes(packageSpecifier)) {
-    yield { module: new URL(builtinProtocol + packageSpecifier) }
+    yield { resolution: new URL(builtinProtocol + packageSpecifier) }
 
     return true
   }
@@ -331,7 +331,7 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
     }
 
     if (target === '.' || target === '..' || target[0] === '/' || target.startsWith('./') || target.startsWith('../')) {
-      yield { module: new URL(target, packageURL) }
+      yield { resolution: new URL(target, packageURL) }
 
       return true
     }
@@ -364,9 +364,8 @@ exports.lookupPackageScope = function * lookupPackageScope (url, opts = {}) {
   const { resolutions = null } = opts
 
   if (resolutions) {
-    for (const resolution of exports.preresolved('bare:package', resolutions, url, opts)) {
-      if (resolution.module) return yield resolution.module
-      break
+    for (const { resolution } of exports.preresolved('bare:package', resolutions, url, opts)) {
+      if (resolution) return yield resolution
     }
   }
 
@@ -393,11 +392,11 @@ exports.file = function * (filename, parentURL, isIndex, opts = {}) {
   const { extensions = [] } = opts
 
   if (!isIndex) {
-    yield { module: new URL(filename, parentURL) }
+    yield { resolution: new URL(filename, parentURL) }
   }
 
   for (const ext of extensions) {
-    yield { module: new URL(filename + ext, parentURL) }
+    yield { resolution: new URL(filename + ext, parentURL) }
   }
 
   return !isIndex || extensions.length > 0

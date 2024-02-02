@@ -93,7 +93,7 @@ while (next.done !== true) {
 
     next = generator.next(info)
   } else {
-    const resolution = value.module
+    const resolution = value.resolution
 
     next = generator.next()
   }
