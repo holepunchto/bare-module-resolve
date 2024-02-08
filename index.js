@@ -72,11 +72,11 @@ exports.module = function * (specifier, parentURL, opts = {}) {
     }
   }
 
-  if (yield * exports.packageImports(specifier, parentURL, opts)) {
+  if (yield * exports.url(specifier, opts)) {
     return true
   }
 
-  if (yield * exports.url(specifier, opts)) {
+  if (yield * exports.packageImports(specifier, parentURL, opts)) {
     return true
   }
 

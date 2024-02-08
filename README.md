@@ -112,9 +112,9 @@ Options are the same as `resolve()` for all functions.
 3.  If `options.imports` is set:
     1.  If `packageImportsExports(specifier, options.imports, parentURL, true, options)` returns `true`:
         1.  Return `true`.
-4.  If `packageImports(specifier, parentURL, options)` returns `true`:
+4.  If `url(specifier, options)` returns `true`:
     1.  Return `true`.
-5.  If `url(specifier, options)` returns `true`:
+5.  If `packageImports(specifier, parentURL, options)` returns `true`:
     1.  Return `true`.
 6.  If `specifier` equals `.` or `..`, or if `specifier` starts with `/`, `\`, `./`, `.\`, `../`, or `..\`:
     1.  Let `yielded` be `false`.
