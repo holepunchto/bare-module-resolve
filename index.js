@@ -98,19 +98,26 @@ exports.module = function * (specifier, parentURL, opts = {}) {
 }
 
 exports.url = function * (url, parentURL, opts = {}) {
+  let resolution
   try {
-    const resolution = new URL(url)
-
-    if (resolution.protocol === 'node:') {
-      return yield * exports.package(resolution.pathname, parentURL, opts)
-    }
-
-    yield { resolution }
-
-    return true
+    resolution = new URL(url)
   } catch {
     return false
   }
+
+  if (resolution.protocol === 'node:') {
+    const specifier = resolution.pathname
+
+    if (specifier === '.' || specifier === '..' || specifier[0] === '/' || specifier.startsWith('./') || specifier.startsWith('../')) {
+      throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${url}' is not a valid package name`)
+    }
+
+    return yield * exports.package(specifier, parentURL, opts)
+  }
+
+  yield { resolution }
+
+  return true
 }
 
 exports.preresolved = function * (specifier, resolutions, parentURL, opts = {}) {

@@ -127,11 +127,13 @@ Options are the same as `resolve()` for all functions.
 
 #### `const generator = resolve.url(url, parentURL[, options])`
 
-1.  If `url` is a valid URL:
-    1.  If `url.protocol` equals `node:`:
-        1.  Return `package(url.pathname, parentURL, options)`
-    2.  Yield `url` and return `true`.
-2.  Return `false`.
+1.  If `url` is not a valid URL:
+    1.  Return `false`.
+2.  If `url.protocol` equals `node:`:
+    1.  Let `specifier` be `url.pathname`.
+    2.  If `specifier` equals `.` or `..`, or if `specifier` starts with `/`, `\`, `./`, `.\`, `../`, or `..\`, throw.
+    3.  Return `package(specifier, parentURL, options)`
+3.  Yield `url` and return `true`.
 
 #### `const generator = resolve.preresolved(specifier, resolutions, parentURL[, options])`
 

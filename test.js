@@ -1122,6 +1122,10 @@ test('node: protocol without match', (t) => {
   t.alike(result, [])
 })
 
+test('node: protocol with invalid package name', (t) => {
+  t.exception(() => [...resolve('node:/d/', new URL('file:///a/b/c'))])
+})
+
 test('package scope lookup with resolutions map', (t) => {
   const resolutions = {
     'file:///a/b/c': {
