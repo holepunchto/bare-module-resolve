@@ -72,7 +72,7 @@ exports.module = function * (specifier, parentURL, opts = {}) {
     }
   }
 
-  if (yield * exports.url(specifier, opts)) {
+  if (yield * exports.url(specifier, parentURL, opts)) {
     return true
   }
 
@@ -97,9 +97,15 @@ exports.module = function * (specifier, parentURL, opts = {}) {
   return yield * exports.package(specifier, parentURL, opts)
 }
 
-exports.url = function * (url, opts = {}) {
+exports.url = function * (url, parentURL, opts = {}) {
   try {
-    yield { resolution: new URL(url) }
+    const resolution = new URL(url)
+
+    if (resolution.protocol === 'node:') {
+      return yield * exports.package(resolution.pathname, parentURL, opts)
+    }
+
+    yield { resolution }
 
     return true
   } catch {
@@ -326,7 +332,7 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
       target = target.replaceAll('*', patternMatch)
     }
 
-    if (yield * exports.url(target, opts)) {
+    if (yield * exports.url(target, packageURL, opts)) {
       return true
     }
 

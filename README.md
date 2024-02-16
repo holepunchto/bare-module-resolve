@@ -112,7 +112,7 @@ Options are the same as `resolve()` for all functions.
 3.  If `options.imports` is set:
     1.  If `packageImportsExports(specifier, options.imports, parentURL, true, options)` returns `true`:
         1.  Return `true`.
-4.  If `url(specifier, options)` returns `true`:
+4.  If `url(specifier, parentURL, options)` returns `true`:
     1.  Return `true`.
 5.  If `packageImports(specifier, parentURL, options)` returns `true`:
     1.  Return `true`.
@@ -125,10 +125,12 @@ Options are the same as `resolve()` for all functions.
     4.  Return `yielded`.
 7.  Return `package(specifier, parentURL, options)`.
 
-#### `const generator = resolve.url(url[, options])`
+#### `const generator = resolve.url(url, parentURL[, options])`
 
 1.  If `url` is a valid URL:
-    1.  Yield `url` and return `true`.
+    1.  If `url.protocol` equals `node:`:
+        1.  Return `package(url.pathname, parentURL, options)`
+    2.  Yield `url` and return `true`.
 2.  Return `false`.
 
 #### `const generator = resolve.preresolved(specifier, resolutions, parentURL[, options])`
@@ -240,7 +242,7 @@ Options are the same as `resolve()` for all functions.
     1.  If `target` does not start with `./` and `isImports` is `false`, throw.
     2.  If `patternMatch` is not `null`:
         1.  Replace every instance of `*` in `target` with `patternMatch`.
-    3.  If `url(target, options)` returns `true`:
+    3.  If `url(target, packageURL, options)` returns `true`:
         1.  Return `true`.
     4.  If `target` equals `.` or `..`, or if `target` starts with `/`, `./`, or `../`:
         1.  Yield the resolution of `target` relative to `packageURL` and return `true`.
