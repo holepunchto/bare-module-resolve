@@ -66,12 +66,6 @@ exports.module = function * (specifier, parentURL, opts = {}) {
     }
   }
 
-  if (imports) {
-    if (yield * exports.packageImportsExports(specifier, imports, parentURL, true, opts)) {
-      return true
-    }
-  }
-
   if (yield * exports.url(specifier, parentURL, opts)) {
     return true
   }
@@ -81,6 +75,12 @@ exports.module = function * (specifier, parentURL, opts = {}) {
   }
 
   if (specifier === '.' || specifier === '..' || specifier[0] === '/' || specifier[0] === '\\' || specifier.startsWith('./') || specifier.startsWith('.\\') || specifier.startsWith('../') || specifier.startsWith('..\\')) {
+    if (imports) {
+      if (yield * exports.packageImportsExports(specifier, imports, parentURL, true, opts)) {
+        return true
+      }
+    }
+
     let yielded = false
 
     if (yield * exports.file(specifier, parentURL, false, opts)) {
@@ -98,11 +98,19 @@ exports.module = function * (specifier, parentURL, opts = {}) {
 }
 
 exports.url = function * (url, parentURL, opts = {}) {
+  const { imports = null } = opts
+
   let resolution
   try {
     resolution = new URL(url)
   } catch {
     return false
+  }
+
+  if (imports) {
+    if (yield * exports.packageImportsExports(resolution.href, imports, parentURL, true, opts)) {
+      return true
+    }
   }
 
   if (resolution.protocol === 'node:') {
@@ -257,6 +265,8 @@ exports.packageExports = function * (packageURL, subpath, packageExports, opts =
 }
 
 exports.packageImports = function * (specifier, parentURL, opts = {}) {
+  const { imports = null } = opts
+
   if (specifier === '#' || specifier.startsWith('#/')) {
     throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${specifier}' is not a valid internal imports specifier`)
   }
@@ -276,6 +286,12 @@ exports.packageImports = function * (specifier, parentURL, opts = {}) {
       }
 
       break
+    }
+  }
+
+  if (imports) {
+    if (yield * exports.packageImportsExports(specifier, imports, parentURL, true, opts)) {
+      return true
     }
   }
 

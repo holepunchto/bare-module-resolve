@@ -1092,6 +1092,46 @@ test('scoped package.json inside package', (t) => {
   ])
 })
 
+test('default imports map', (t) => {
+  const imports = {
+    './e.js': './f.js'
+  }
+
+  const result = []
+
+  for (const resolution of resolve('./e.js', new URL('file:///a/b/d/'), { imports })) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/d/f.js'])
+})
+
+test('default imports map with package.json#imports', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/d/package.json') {
+      return {
+        imports: {
+          './e.js': './g.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  const imports = {
+    './e.js': './f.js'
+  }
+
+  const result = []
+
+  for (const resolution of resolve('./e.js', new URL('file:///a/b/d/'), { imports }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/d/g.js'])
+})
+
 test('node: protocol', (t) => {
   function readPackage (url) {
     if (url.href === 'file:///a/b/node_modules/d/package.json') {
