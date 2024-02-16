@@ -1092,6 +1092,40 @@ test('scoped package.json inside package', (t) => {
   ])
 })
 
+test('node: protocol', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        main: 'e.js'
+      }
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve('node:d', new URL('file:///a/b/c'), readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/e.js'])
+})
+
+test('node: protocol without match', (t) => {
+  const result = []
+
+  for (const resolution of resolve('node:d', new URL('file:///a/b/c'))) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [])
+})
+
+test('node: protocol with invalid package name', (t) => {
+  t.exception(() => [...resolve('node:/d/', new URL('file:///a/b/c'))])
+})
+
 test('package scope lookup with resolutions map', (t) => {
   const resolutions = {
     'file:///a/b/c': {

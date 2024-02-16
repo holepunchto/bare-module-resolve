@@ -72,7 +72,7 @@ exports.module = function * (specifier, parentURL, opts = {}) {
     }
   }
 
-  if (yield * exports.url(specifier, opts)) {
+  if (yield * exports.url(specifier, parentURL, opts)) {
     return true
   }
 
@@ -97,14 +97,27 @@ exports.module = function * (specifier, parentURL, opts = {}) {
   return yield * exports.package(specifier, parentURL, opts)
 }
 
-exports.url = function * (url, opts = {}) {
+exports.url = function * (url, parentURL, opts = {}) {
+  let resolution
   try {
-    yield { resolution: new URL(url) }
-
-    return true
+    resolution = new URL(url)
   } catch {
     return false
   }
+
+  if (resolution.protocol === 'node:') {
+    const specifier = resolution.pathname
+
+    if (specifier === '.' || specifier === '..' || specifier[0] === '/' || specifier.startsWith('./') || specifier.startsWith('../')) {
+      throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${url}' is not a valid package name`)
+    }
+
+    return yield * exports.package(specifier, parentURL, opts)
+  }
+
+  yield { resolution }
+
+  return true
 }
 
 exports.preresolved = function * (specifier, resolutions, parentURL, opts = {}) {
@@ -326,7 +339,7 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
       target = target.replaceAll('*', patternMatch)
     }
 
-    if (yield * exports.url(target, opts)) {
+    if (yield * exports.url(target, packageURL, opts)) {
       return true
     }
 
