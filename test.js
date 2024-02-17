@@ -1069,6 +1069,32 @@ test('imports override with relative specifier', (t) => {
   t.alike(result, ['file:///a/b/e.js'])
 })
 
+test('imports override with package.json#imports', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/c/package.json') {
+      return {
+        imports: {
+          './d': './f.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  const imports = {
+    './d': './e.js'
+  }
+
+  const result = []
+
+  for (const resolution of resolve('./d', new URL('file:///a/b/c/'), { imports }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/c/f.js'])
+})
+
 test('scoped package.json inside package', (t) => {
   function readPackage (url) {
     if (url.href === 'file:///a/b/node_modules/d/e/package.json') {

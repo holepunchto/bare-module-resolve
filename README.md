@@ -46,7 +46,7 @@ Options include:
 
 ```js
 {
-  // An additional "imports" map to apply to all specifiers. Follows the same
+  // A default "imports" map to apply to all specifiers. Follows the same
   // syntax and rules as the "imports" property defined in `package.json`.
   imports,
   // A list of builtin module specifiers. If matched, the protocol of the
@@ -109,31 +109,34 @@ Options are the same as `resolve()` for all functions.
 2.  If `options.resolutions` is set:
     1.  If `preresolved(specifier, options.resolutions, parentURL, options)` returns `true`:
         1.  Return `true`.
-3.  If `options.imports` is set:
-    1.  If `packageImportsExports(specifier, options.imports, parentURL, true, options)` returns `true`:
-        1.  Return `true`.
 4.  If `url(specifier, parentURL, options)` returns `true`:
     1.  Return `true`.
 5.  If `packageImports(specifier, parentURL, options)` returns `true`:
     1.  Return `true`.
 6.  If `specifier` equals `.` or `..`, or if `specifier` starts with `/`, `\`, `./`, `.\`, `../`, or `..\`:
-    1.  Let `yielded` be `false`.
-    2.  If `file(specifier, parentURL, false, options)` returns `true`:
+    1.  If `options.imports` is set:
+        1.  If `packageImportsExports(specifier, options.imports, parentURL, true, options)` returns `true`:
+            1.  Return `true`.
+    2.  Let `yielded` be `false`.
+    3.  If `file(specifier, parentURL, false, options)` returns `true`:
         1.  Set `yielded` to `true`.
-    3.  If `directory(specifier, parentURL, options)` returns `true`:
+    4.  If `directory(specifier, parentURL, options)` returns `true`:
         1.  Set `yielded` to `true`.
-    4.  Return `yielded`.
+    5.  Return `yielded`.
 7.  Return `package(specifier, parentURL, options)`.
 
 #### `const generator = resolve.url(url, parentURL[, options])`
 
 1.  If `url` is not a valid URL:
     1.  Return `false`.
-2.  If `url.protocol` equals `node:`:
+2.  If `options.imports` is set:
+    1.  If `packageImportsExports(url.href, options.imports, parentURL, true, options)` returns `true`:
+        1.  Return `true`.
+3.  If `url.protocol` equals `node:`:
     1.  Let `specifier` be `url.pathname`.
     2.  If `specifier` equals `.` or `..`, or if `specifier` starts with `/`, `\`, `./`, `.\`, `../`, or `..\`, throw.
     3.  Return `package(specifier, parentURL, options)`
-3.  Yield `url` and return `true`.
+4.  Yield `url` and return `true`.
 
 #### `const generator = resolve.preresolved(specifier, resolutions, parentURL[, options])`
 
@@ -220,7 +223,10 @@ Options are the same as `resolve()` for all functions.
                 1.  Return `true`.
         2.  If specifier starts with `#`, throw.
         3.  Return `false`.
-3.  Return `false`.
+3.  If `options.imports` is set:
+    1.  If `packageImportsExports(url.href, options.imports, parentURL, true, options)` returns `true`:
+        1.  Return `true`.
+4.  Return `false`.
 
 #### `const generator = resolve.packageImportsExports(matchKey, matchObject, packageURL, isImports[, options])`
 
