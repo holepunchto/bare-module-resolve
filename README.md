@@ -56,6 +56,8 @@ Options include:
   builtinProtocol: 'builtin:',
   // The supported import conditions. "default" is always recognized.
   conditions: [],
+  // The supported engine versions.
+  engines: {},
   // The file extensions to look for. Must be provided to support extensionless
   // specifier resolution and directory support, such as resolving './foo' to
   // './foo.js' or './foo/index.js'.
@@ -165,14 +167,16 @@ Options are the same as `resolve()` for all functions.
     2.  Set `parentURL` to the substring of `parentURL` until the last `/`.
     3.  Let `info` be the result of yielding the resolution of `package.json` relative to `packageURL`.
     4.  If `info` is not `null`:
-        1.  If `info.exports` is set:
+        1.  If `info.engines` is set:
+            1.  Call `validateEngines(packageURL, info.engines, options)`.
+        2.  If `info.exports` is set:
             1.  Return `packageExports(packageURL, packageSubpath, info.exports, options)`.
-        2.  If `packageSubpath` is `.`:
+        3.  If `packageSubpath` is `.`:
             1.  If `info.main` is a non-empty string:
                 1.  Set `packageSubpath` to `info.main`.
             2.  Otherwise:
                 1.  Return `file('index', packageURL, true, options)`.
-        3.  Let `yielded` be `false`.
+        4.  Let `yielded` be `false`.
             1.  If `file(packageSubpath, packageURL, false, options)` returns `true`:
                 1.  Set `yielded` to `true`.
             2.  If `directory(packageSubpath, packageURL, options)` returns `true`:
