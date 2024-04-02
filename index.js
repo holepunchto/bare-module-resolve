@@ -140,7 +140,7 @@ exports.preresolved = function * (specifier, resolutions, parentURL, opts = {}) 
 }
 
 exports.package = function * (packageSpecifier, parentURL, opts = {}) {
-  const { builtins = [], builtinProtocol = 'builtin:', engines = {} } = opts
+  const { builtins = [], builtinProtocol = 'builtin:' } = opts
 
   let packageName
 
