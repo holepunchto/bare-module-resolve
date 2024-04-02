@@ -1,3 +1,4 @@
+const semver = require('semver')
 const errors = require('./lib/errors')
 
 module.exports = exports = function resolve (specifier, parentURL, opts, readPackage) {
@@ -183,6 +184,8 @@ exports.package = function * (packageSpecifier, parentURL, opts = {}) {
     const info = yield { package: new URL('package.json', packageURL) }
 
     if (info) {
+      if (info.engines) exports.validateEngines(packageURL, info.engines, opts)
+
       if (info.exports) {
         return yield * exports.packageExports(packageURL, packageSubpath, info.exports, opts)
       }
@@ -325,6 +328,22 @@ exports.packageImportsExports = function * (matchKey, matchObject, packageURL, i
   }
 
   return false
+}
+
+exports.validateEngines = function validateEngines (packageURL, packageEngines, opts = {}) {
+  const { engines = {} } = opts
+
+  for (const [engine, range] of Object.entries(packageEngines)) {
+    if (engine in engines) {
+      const version = engines[engine]
+
+      if (!semver.satisfies(version, range)) {
+        packageURL = new URL('package.json', packageURL)
+
+        throw errors.UNSUPPORTED_ENGINE(`Package not compatible with engine '${engine}' ${version}, requires range '${range}' defined by "engines" in ${packageURL}`)
+      }
+    }
+  }
 }
 
 exports.patternKeyCompare = function patternKeyCompare (keyA, keyB) {

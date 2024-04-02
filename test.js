@@ -1152,6 +1152,51 @@ test('node: protocol with invalid package name', (t) => {
   t.exception(() => [...resolve('node:/d/', new URL('file:///a/b/c'))])
 })
 
+test('engines with valid range', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        engines: {
+          foo: '>=1.2.3'
+        }
+      }
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { extensions: ['.js'], engines: { foo: '1.2.4' } }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/index.js'])
+})
+
+test('engines with invalid range', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        engines: {
+          foo: '>=1.2.3'
+        }
+      }
+    }
+
+    return null
+  }
+
+  try {
+    for (const resolution of resolve('d', new URL('file:///a/b/c'), { extensions: ['.js'], engines: { foo: '1.2.2' } }, readPackage)) {
+      t.absent(resolution)
+    }
+  } catch (err) {
+    t.comment(err.message)
+    t.ok(err)
+  }
+})
+
 test('package scope lookup with resolutions map', (t) => {
   const resolutions = {
     'file:///a/b/c': {
