@@ -220,11 +220,31 @@ exports.packageSelf = function * (packageName, packageSubpath, parentURL, opts =
     const info = yield { package: packageURL }
 
     if (info) {
-      if (info.exports && info.name === packageName) {
+      if (info.name !== packageName) return false
+
+      if (info.exports) {
         return yield * exports.packageExports(packageURL, packageSubpath, info.exports, opts)
       }
 
-      break
+      if (packageSubpath === '.') {
+        if (typeof info.main === 'string' && info.main !== '') {
+          packageSubpath = info.main
+        } else {
+          return yield * exports.file('index', packageURL, true, opts)
+        }
+      }
+
+      let yielded = false
+
+      if (yield * exports.file(packageSubpath, packageURL, false, opts)) {
+        yielded = true
+      }
+
+      if (yield * exports.directory(packageSubpath, packageURL, opts)) {
+        yielded = true
+      }
+
+      return yielded
     }
   }
 

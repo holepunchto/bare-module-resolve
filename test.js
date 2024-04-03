@@ -482,6 +482,50 @@ test('absolute specifier, Windows path with drive letter', (t) => {
   ])
 })
 
+test('package.json#main with self reference', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/d/package.json') {
+      return {
+        name: 'd',
+        main: 'e.js'
+      }
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/d/'), readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [
+    'file:///a/b/d/e.js'
+  ])
+})
+
+test('package.json#main with self reference and name mismatch', (t) => {
+  function readPackage (url) {
+    if (url.href === 'file:///a/b/d/package.json') {
+      return {
+        name: 'e',
+        main: 'e.js'
+      }
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/d/'), readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [])
+})
+
 test('package.json#exports with expansion key', (t) => {
   function readPackage (url) {
     if (url.href === 'file:///a/b/node_modules/d/package.json') {

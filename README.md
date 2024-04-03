@@ -190,9 +190,21 @@ Options are the same as `resolve()` for all functions.
 1.  For each value `packageURL` of `lookupPackageScope(parentURL, options)`:
     1.  Let `info` be the result of yielding `packageURL`.
     2.  If `info` is not `null`:
-        1.  If `info.exports` is set and `info.name` equals `packageName`:
+        1.  If not `info.name` equals `packageName`:
+            1.  Return `false`.
+        2.  If `info.exports` is set:
             1.  Return `packageExports(packageURL, packageSubpath, info.exports, options)`.
-        2.  Return `false`.
+        3.  If `packageSubpath` is `.`:
+            1.  If `info.main` is a non-empty string:
+                1.  Set `packageSubpath` to `info.main`.
+            2.  Otherwise:
+                1.  Return `file('index', packageURL, true, options)`.
+        4.  Let `yielded` be `false`.
+            1.  If `file(packageSubpath, packageURL, false, options)` returns `true`:
+                1.  Set `yielded` to `true`.
+            2.  If `directory(packageSubpath, packageURL, options)` returns `true`:
+                1.  Set `yielded` to `true`.
+            3.  Return `yielded`.
 2.  Return `false`.
 
 #### `const generator = resolve.packageExports(packageURL, subpath, exports[, options])`
