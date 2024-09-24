@@ -1,4 +1,4 @@
-const semver = require('semver')
+const satisfies = require('semifies')
 const errors = require('./lib/errors')
 
 module.exports = exports = function resolve (specifier, parentURL, opts, readPackage) {
@@ -357,7 +357,7 @@ exports.validateEngines = function validateEngines (packageURL, packageEngines, 
     if (engine in engines) {
       const version = engines[engine]
 
-      if (!semver.satisfies(version, range)) {
+      if (!satisfies(version, range)) {
         packageURL = new URL('package.json', packageURL)
 
         throw errors.UNSUPPORTED_ENGINE(`Package not compatible with engine '${engine}' ${version}, requires range '${range}' defined by "engines" in ${packageURL}`)
