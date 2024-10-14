@@ -1244,7 +1244,7 @@ test('engines with invalid range', (t) => {
 test('package scope lookup with resolutions map', (t) => {
   const resolutions = {
     'file:///a/b/c': {
-      'bare:package': 'file:///a/package.json'
+      '#package': 'file:///a/package.json'
     }
   }
 

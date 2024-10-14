@@ -432,7 +432,7 @@ exports.lookupPackageScope = function * lookupPackageScope (url, opts = {}) {
   const { resolutions = null } = opts
 
   if (resolutions) {
-    for (const { resolution } of exports.preresolved('bare:package', resolutions, url, opts)) {
+    for (const { resolution } of exports.preresolved('#package', resolutions, url, opts)) {
       if (resolution) return yield resolution
     }
   }
