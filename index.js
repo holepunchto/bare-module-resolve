@@ -284,7 +284,7 @@ exports.packageExports = function * (packageURL, subpath, packageExports, opts =
 
   packageURL = new URL('package.json', packageURL)
 
-  throw errors.PACKAGE_PATH_NOT_EXPORTED(`Package subpath '${subpath}' is not defined by "exports" in ${packageURL}`)
+  throw errors.PACKAGE_PATH_NOT_EXPORTED(`Package subpath '${subpath}' is not defined by "exports" in '${packageURL}'`)
 }
 
 exports.packageImports = function * (specifier, parentURL, opts = {}) {
@@ -305,7 +305,7 @@ exports.packageImports = function * (specifier, parentURL, opts = {}) {
       }
 
       if (specifier.startsWith('#')) {
-        throw errors.PACKAGE_IMPORT_NOT_DEFINED(`Package import specifier '${specifier}' is not defined by "imports" in ${packageURL}`)
+        throw errors.PACKAGE_IMPORT_NOT_DEFINED(`Package import specifier '${specifier}' is not defined by "imports" in '${packageURL}'`)
       }
 
       break
@@ -360,7 +360,7 @@ exports.validateEngines = function validateEngines (packageURL, packageEngines, 
       if (!satisfies(version, range)) {
         packageURL = new URL('package.json', packageURL)
 
-        throw errors.UNSUPPORTED_ENGINE(`Package not compatible with engine '${engine}' ${version}, requires range '${range}' defined by "engines" in ${packageURL}`)
+        throw errors.UNSUPPORTED_ENGINE(`Package not compatible with engine '${engine}' ${version}, requires range '${range}' defined by "engines" in '${packageURL}'`)
       }
     }
   }
@@ -387,7 +387,7 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
     if (!target.startsWith('./') && !isImports) {
       packageURL = new URL('package.json', packageURL)
 
-      throw errors.INVALID_PACKAGE_TARGET(`Invalid target '${target}' defined by "exports" in ${packageURL}`)
+      throw errors.INVALID_PACKAGE_TARGET(`Invalid target '${target}' defined by "exports" in '${packageURL}'`)
     }
 
     if (patternMatch !== null) {
