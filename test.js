@@ -1256,3 +1256,23 @@ test('package scope lookup with resolutions map', (t) => {
 
   t.alike(result, ['file:///a/package.json'])
 })
+
+test('package scope lookup with root file: URL', (t) => {
+  const result = []
+
+  for (const scope of resolve.lookupPackageScope(new URL('file:///'))) {
+    result.push(scope.href)
+  }
+
+  t.alike(result, ['file:///package.json'])
+})
+
+test('package scope lookup with root non-file: URL', (t) => {
+  const result = []
+
+  for (const scope of resolve.lookupPackageScope(new URL('drive:///'))) {
+    result.push(scope.href)
+  }
+
+  t.alike(result, ['drive:///package.json'])
+})

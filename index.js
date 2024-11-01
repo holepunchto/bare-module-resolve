@@ -210,7 +210,7 @@ exports.package = function * (packageSpecifier, parentURL, opts = {}) {
 
       return yielded
     }
-  } while (parentURL.pathname !== '/')
+  } while (parentURL.pathname !== '' && parentURL.pathname !== '/')
 
   return false
 }
@@ -453,7 +453,7 @@ exports.lookupPackageScope = function * lookupPackageScope (url, opts = {}) {
     scopeURL.pathname = scopeURL.pathname.substring(0, scopeURL.pathname.lastIndexOf('/'))
 
     if (scopeURL.pathname.length === 3 && exports.isWindowsDriveLetter(scopeURL.pathname.substring(1))) break
-  } while (scopeURL.pathname !== '/')
+  } while (scopeURL.pathname !== '' && scopeURL.pathname !== '/')
 }
 
 exports.file = function * (filename, parentURL, isIndex, opts = {}) {
