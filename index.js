@@ -444,13 +444,19 @@ exports.builtinTarget = function * (packageSpecifier, packageVersion, target, op
     }
 
     if (packageSpecifier === targetName) {
-      if (packageVersion !== null && (targetVersion === null || packageVersion === targetVersion)) {
-        yield { resolution: new URL(builtinProtocol + packageSpecifier + '@' + packageVersion) }
-      } else {
+      if (packageVersion === null) {
         yield { resolution: new URL(builtinProtocol + packageSpecifier) }
+
+        return true
       }
 
-      return true
+      if (targetVersion === null || packageVersion === targetVersion) {
+        yield { resolution: new URL(builtinProtocol + packageSpecifier + '@' + packageVersion) }
+
+        return true
+      }
+
+      return false
     }
   } else if (Array.isArray(target)) {
     for (const targetValue of target) {

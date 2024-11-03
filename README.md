@@ -292,10 +292,12 @@ Options are the same as `resolve()` for all functions.
         1.  Let `targetName` be the substring of `target` until the second `@` or the end of the string.
         2.  Let `targetVersion` be the substring of `target` from the character following the second `@` and to the end of string.
     1.  If `packageSpecifier` equals `targetName`:
-        1.  If `packageVersion` is not `null` and `targetVersion` is either `null` or equals `packageVersion`:
-            1.  Yield `options.builtinProtocol` concatenated with `packageSpecifier`, `@`, and `packageName` and return `true`.
-        2.  Otherwise:
+        1.  If `packageVersion` is `null`:
             1.  Yield `options.builtinProtocol` concatenated with `packageSpecifier` and return `true`.
+        2.  If `targetVersion` is either `null` or equals `packageVersion`:
+            1.  Yield `options.builtinProtocol` concatenated with `packageSpecifier`, `@`, and `packageName` and return `true`.
+        3.  Otherwise:
+            1.  Return `false`.
 2.  If `target` is an array:
     1.  For each value `targetValue` of `target`:
         1.  If `builtinTarget(packageSpecifier, packageVersion, targetValue, options)` returns `true`:
