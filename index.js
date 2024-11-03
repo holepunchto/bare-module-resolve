@@ -455,8 +455,6 @@ exports.builtinTarget = function * (packageSpecifier, packageVersion, target, op
 
         return true
       }
-
-      return false
     }
   } else if (Array.isArray(target)) {
     for (const targetValue of target) {
