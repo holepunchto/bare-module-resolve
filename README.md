@@ -151,8 +151,8 @@ Options are the same as `resolve()` for all functions.
 
 1.  Let `packageName` be `undefined`.
 2.  If `packageSpecifier` is the empty string, throw.
-3.  If `options.builtins` includes `packageSpecifier`:
-    1.  Yield `options.builtinProtocol` concatenated with `packageSpecifier` and return `true`.
+3.  If `builtinTarget(packageSpecifier, options.builtins, options)` returns `true`:
+    1.  Return `true`.
 4.  If `packageSpecifier` does not start with `@`:
     1.  Set `packageName` to the substring of `packageSpecifier` until the first `/` or the end of the string.
 5.  Otherwise:
@@ -280,6 +280,22 @@ Options are the same as `resolve()` for all functions.
         1.  If `p` equals `default` or if `options.conditions` includes `p`:
             1.  Let `targetValue` be `target[p]`.
             2.  Return `packageTarget(packageURL, targetValue, patternMatch, isImports, options)`.
+4.  Return `false`.
+
+#### `const generator = resolve.builtinTarget(packageSpecifier, target[, options])`
+
+1.  If `target` is a string:
+    1.  If `packageSpecifier` equals `target`:
+        1.  Yield `options.builtinProtocol` concatenated with `packageSpecifier` and return `true`.
+2.  If `target` is an array:
+    1.  For each value `targetValue` of `target`:
+        1.  If `builtinTarget(packageSpecifier, targetValue, options)` returns `true`:
+            1.  Return `true`.
+3.  If `target` is a non-`null` object:
+    1.  For each key `p` of `target`:
+        1.  If `p` equals `default` or if `options.conditions` includes `p`:
+            1.  Let `targetValue` be `target[p]`.
+            2.  Return `builtinTarget(packageSpecifier, targetValue, options)`.
 4.  Return `false`.
 
 #### `const generator = resolve.file(filename, parentURL, isIndex[, options])`

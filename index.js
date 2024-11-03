@@ -140,7 +140,7 @@ exports.preresolved = function * (specifier, resolutions, parentURL, opts = {}) 
 }
 
 exports.package = function * (packageSpecifier, parentURL, opts = {}) {
-  const { builtins = [], builtinProtocol = 'builtin:' } = opts
+  const { builtins = [] } = opts
 
   let packageName
 
@@ -148,9 +148,7 @@ exports.package = function * (packageSpecifier, parentURL, opts = {}) {
     throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${packageSpecifier}' is not a valid package name`)
   }
 
-  if (builtins.includes(packageSpecifier)) {
-    yield { resolution: new URL(builtinProtocol + packageSpecifier) }
-
+  if (yield * exports.builtinTarget(packageSpecifier, builtins, opts)) {
     return true
   }
 
@@ -421,6 +419,36 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
         const targetValue = target[p]
 
         return yield * exports.packageTarget(packageURL, targetValue, patternMatch, isImports, opts)
+      }
+    }
+  }
+
+  return false
+}
+
+exports.builtinTarget = function * (packageSpecifier, target, opts = {}) {
+  const { builtinProtocol = 'builtin:', conditions = [] } = opts
+
+  if (typeof target === 'string') {
+    if (packageSpecifier === target) {
+      yield { resolution: new URL(builtinProtocol + packageSpecifier) }
+
+      return true
+    }
+  } else if (Array.isArray(target)) {
+    for (const targetValue of target) {
+      if (yield * exports.builtinTarget(packageSpecifier, targetValue, opts)) {
+        return true
+      }
+    }
+  } else if (typeof target === 'object' && target !== null) {
+    const keys = Object.keys(target)
+
+    for (const p of keys) {
+      if (p === 'default' || conditions.includes(p)) {
+        const targetValue = target[p]
+
+        return yield * exports.builtinTarget(packageSpecifier, targetValue, opts)
       }
     }
   }
