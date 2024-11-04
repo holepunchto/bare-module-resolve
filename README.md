@@ -287,10 +287,10 @@ Options are the same as `resolve()` for all functions.
 1.  If `target` is a string:
     1.  If `target` does not start with `@`:
         1.  Let `targetName` be the substring of `target` until the first `@` or the end of the string.
-        2.  Let `targetVersion` be the substring of `target` from the character following the first `@` and to the end of string.
+        2.  Let `targetVersion` be the substring of `target` from the character following the first `@` and to the end of string, or `null` if no such substring exists.
     2.  Otherwise:
         1.  Let `targetName` be the substring of `target` until the second `@` or the end of the string.
-        2.  Let `targetVersion` be the substring of `target` from the character following the second `@` and to the end of string.
+        2.  Let `targetVersion` be the substring of `target` from the character following the second `@` and to the end of string, or `null` if no such substring exists.
     1.  If `packageSpecifier` equals `targetName`:
         1.  If `packageVersion` is `null`:
             1.  Yield `options.builtinProtocol` concatenated with `packageSpecifier` and return `true`.
