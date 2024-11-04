@@ -140,19 +140,13 @@ exports.preresolved = function * (specifier, resolutions, parentURL, opts = {}) 
 }
 
 exports.package = function * (packageSpecifier, parentURL, opts = {}) {
-  const { builtins = [], builtinProtocol = 'builtin:' } = opts
-
-  let packageName
+  const { builtins = [] } = opts
 
   if (packageSpecifier === '') {
     throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${packageSpecifier}' is not a valid package name`)
   }
 
-  if (builtins.includes(packageSpecifier)) {
-    yield { resolution: new URL(builtinProtocol + packageSpecifier) }
-
-    return true
-  }
+  let packageName
 
   if (packageSpecifier[0] !== '@') {
     packageName = packageSpecifier.split('/', 1).join()
@@ -166,6 +160,10 @@ exports.package = function * (packageSpecifier, parentURL, opts = {}) {
 
   if (packageName[0] === '.' || packageName.includes('\\') || packageName.includes('%')) {
     throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${packageSpecifier}' is not a valid package name`)
+  }
+
+  if (yield * exports.builtinTarget(packageSpecifier, null, builtins, opts)) {
+    return true
   }
 
   let packageSubpath = '.' + packageSpecifier.substring(packageName.length)
@@ -421,6 +419,57 @@ exports.packageTarget = function * (packageURL, target, patternMatch, isImports,
         const targetValue = target[p]
 
         return yield * exports.packageTarget(packageURL, targetValue, patternMatch, isImports, opts)
+      }
+    }
+  }
+
+  return false
+}
+
+exports.builtinTarget = function * (packageSpecifier, packageVersion, target, opts = {}) {
+  const { builtinProtocol = 'builtin:', conditions = [] } = opts
+
+  if (typeof target === 'string') {
+    const targetParts = target.split('@')
+
+    let targetName
+    let targetVersion
+
+    if (target[0] !== '@') {
+      targetName = targetParts[0]
+      targetVersion = targetParts[1] || null
+    } else {
+      targetName = targetParts.slice(0, 2).join('@')
+      targetVersion = targetParts[2] || null
+    }
+
+    if (packageSpecifier === targetName) {
+      if (packageVersion === null) {
+        yield { resolution: new URL(builtinProtocol + packageSpecifier) }
+
+        return true
+      }
+
+      if (targetVersion === null || packageVersion === targetVersion) {
+        yield { resolution: new URL(builtinProtocol + packageSpecifier + '@' + packageVersion) }
+
+        return true
+      }
+    }
+  } else if (Array.isArray(target)) {
+    for (const targetValue of target) {
+      if (yield * exports.builtinTarget(packageSpecifier, packageVersion, targetValue, opts)) {
+        return true
+      }
+    }
+  } else if (typeof target === 'object' && target !== null) {
+    const keys = Object.keys(target)
+
+    for (const p of keys) {
+      if (p === 'default' || conditions.includes(p)) {
+        const targetValue = target[p]
+
+        return yield * exports.builtinTarget(packageSpecifier, packageVersion, targetValue, opts)
       }
     }
   }

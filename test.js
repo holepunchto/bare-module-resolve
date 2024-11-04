@@ -244,6 +244,44 @@ test('bare specifier with trailing slash', (t) => {
   t.alike(result, ['file:///a/b/node_modules/d/index.js'])
 })
 
+test('bare specifier with builtin', (t) => {
+  const result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { builtins: ['d'] })) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['builtin:d'])
+})
+
+test('bare specifier with versioned builtin', (t) => {
+  const result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { builtins: ['d@1.2.3'] })) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['builtin:d'])
+})
+
+test('bare specifier with conditional builtin', (t) => {
+  let result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { builtins: [{ require: 'd' }], conditions: ['require'] })) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['builtin:d'])
+
+  result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), { builtins: [{ require: 'd' }], conditions: ['import'] })) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [])
+})
+
 test('relative specifier', (t) => {
   const result = []
 

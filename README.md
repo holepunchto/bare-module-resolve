@@ -151,14 +151,14 @@ Options are the same as `resolve()` for all functions.
 
 1.  Let `packageName` be `undefined`.
 2.  If `packageSpecifier` is the empty string, throw.
-3.  If `options.builtins` includes `packageSpecifier`:
-    1.  Yield `options.builtinProtocol` concatenated with `packageSpecifier` and return `true`.
-4.  If `packageSpecifier` does not start with `@`:
+3.  If `packageSpecifier` does not start with `@`:
     1.  Set `packageName` to the substring of `packageSpecifier` until the first `/` or the end of the string.
-5.  Otherwise:
+4.  Otherwise:
     1.  If `packageSpecifier` does not include `/`, throw.
     2.  Set `packageName` to the substring of `packageSpecifier` until the second `/` or the end of the string.
-6.  If `packageName` starts with `.` or includes `\` or `%`, throw.
+5.  If `packageName` starts with `.` or includes `\` or `%`, throw.
+6.  If `builtinTarget(packageSpecifier, null, options.builtins, options)` returns `true`:
+    1.  Return `true`.
 7.  Let `packageSubpath` be `.` concatenated with the substring of `packageSpecifier` from the position at the length of `packageName`.
 8.  If `packageSelf(packageName, packageSubpath, parentURL, options)` returns `true`:
     1.  Return `true`.
@@ -280,6 +280,31 @@ Options are the same as `resolve()` for all functions.
         1.  If `p` equals `default` or if `options.conditions` includes `p`:
             1.  Let `targetValue` be `target[p]`.
             2.  Return `packageTarget(packageURL, targetValue, patternMatch, isImports, options)`.
+4.  Return `false`.
+
+#### `const generator = resolve.builtinTarget(packageSpecifier, packageVersion, target[, options])`
+
+1.  If `target` is a string:
+    1.  If `target` does not start with `@`:
+        1.  Let `targetName` be the substring of `target` until the first `@` or the end of the string.
+        2.  Let `targetVersion` be the substring of `target` from the character following the first `@` and to the end of string, or `null` if no such substring exists.
+    2.  Otherwise:
+        1.  Let `targetName` be the substring of `target` until the second `@` or the end of the string.
+        2.  Let `targetVersion` be the substring of `target` from the character following the second `@` and to the end of string, or `null` if no such substring exists.
+    1.  If `packageSpecifier` equals `targetName`:
+        1.  If `packageVersion` is `null`:
+            1.  Yield `options.builtinProtocol` concatenated with `packageSpecifier` and return `true`.
+        2.  If `targetVersion` is either `null` or equals `packageVersion`:
+            1.  Yield `options.builtinProtocol` concatenated with `packageSpecifier`, `@`, and `packageVersion` and return `true`.
+2.  If `target` is an array:
+    1.  For each value `targetValue` of `target`:
+        1.  If `builtinTarget(packageSpecifier, packageVersion, targetValue, options)` returns `true`:
+            1.  Return `true`.
+3.  If `target` is a non-`null` object:
+    1.  For each key `p` of `target`:
+        1.  If `p` equals `default` or if `options.conditions` includes `p`:
+            1.  Let `targetValue` be `target[p]`.
+            2.  Return `builtinTarget(packageSpecifier, packageVersion, targetValue, options)`.
 4.  Return `false`.
 
 #### `const generator = resolve.file(filename, parentURL, isIndex[, options])`
