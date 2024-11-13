@@ -1,4 +1,4 @@
-const satisfies = require('semifies')
+const { satisfies } = require('bare-semver')
 const errors = require('./lib/errors')
 
 module.exports = exports = function resolve (specifier, parentURL, opts, readPackage) {
