@@ -261,7 +261,7 @@ test('bare specifier with versioned builtin', (t) => {
     result.push(resolution.href)
   }
 
-  t.alike(result, ['builtin:d'])
+  t.alike(result, ['builtin:d@1.2.3'])
 })
 
 test('bare specifier with conditional builtin', (t) => {
