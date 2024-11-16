@@ -444,14 +444,22 @@ exports.builtinTarget = function * (packageSpecifier, packageVersion, target, op
     }
 
     if (packageSpecifier === targetName) {
-      if (packageVersion === null) {
+      if (packageVersion === null && targetVersion === null) {
         yield { resolution: new URL(builtinProtocol + packageSpecifier) }
 
         return true
       }
 
-      if (targetVersion === null || packageVersion === targetVersion) {
-        yield { resolution: new URL(builtinProtocol + packageSpecifier + '@' + packageVersion) }
+      let version = null
+
+      if (packageVersion === null) {
+        version = targetVersion
+      } else if (targetVersion === null || packageVersion === targetVersion) {
+        version = packageVersion
+      }
+
+      if (version !== null) {
+        yield { resolution: new URL(builtinProtocol + packageSpecifier + '@' + version) }
 
         return true
       }

@@ -149,10 +149,10 @@ Options are the same as `resolve()` for all functions.
 
 #### `const generator = resolve.package(packageSpecifier, parentURL[, options])`
 
-1.  Let `packageName` be `undefined`.
-2.  If `packageSpecifier` is the empty string, throw.
-3.  If `packageSpecifier` does not start with `@`:
+1.  If `packageSpecifier` is the empty string, throw.
+2.  If `packageSpecifier` does not start with `@`:
     1.  Set `packageName` to the substring of `packageSpecifier` until the first `/` or the end of the string.
+3.  Let `packageName` be `undefined`.
 4.  Otherwise:
     1.  If `packageSpecifier` does not include `/`, throw.
     2.  Set `packageName` to the substring of `packageSpecifier` until the second `/` or the end of the string.
@@ -292,10 +292,13 @@ Options are the same as `resolve()` for all functions.
         1.  Let `targetName` be the substring of `target` until the second `@` or the end of the string.
         2.  Let `targetVersion` be the substring of `target` from the character following the second `@` and to the end of string, or `null` if no such substring exists.
     1.  If `packageSpecifier` equals `targetName`:
-        1.  If `packageVersion` is `null`:
+        1.  If `packageVersion` is `null` and `targetVersion` is `null`:
             1.  Yield `options.builtinProtocol` concatenated with `packageSpecifier` and return `true`.
-        2.  If `targetVersion` is either `null` or equals `packageVersion`:
-            1.  Yield `options.builtinProtocol` concatenated with `packageSpecifier`, `@`, and `packageVersion` and return `true`.
+        2.  Let `version` be `null`.
+        3.  If `packageVersion` is `null`, let `version` be `targetVersion`.
+        4.  Otherwise, if `targetVersion` is either `null` or equals `packageVersion`, let `version` be `packageVersion`
+        5.  If `version` is not `null`:
+            1.  Yield `options.builtinProtocol` concatenated with `packageSpecifier`, `@`, and `version` and return `true`.
 2.  If `target` is an array:
     1.  For each value `targetValue` of `target`:
         1.  If `builtinTarget(packageSpecifier, packageVersion, targetValue, options)` returns `true`:
