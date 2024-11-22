@@ -10,28 +10,36 @@ npm i bare-module-resolve
 
 For synchronous resolution:
 
-``` js
+```js
 const resolve = require('bare-module-resolve')
 
-function readPackage (url) {
+function readPackage(url) {
   // Read and parse `url` if it exists, otherwise `null`
 }
 
-for (const resolution of resolve('./file.js', new URL('file:///directory/'), readPackage)) {
+for (const resolution of resolve(
+  './file.js',
+  new URL('file:///directory/'),
+  readPackage
+)) {
   console.log(resolution)
 }
 ```
 
 For asynchronous resolution:
 
-``` js
+```js
 const resolve = require('bare-module-resolve')
 
-async function readPackage (url) {
+async function readPackage(url) {
   // Read and parse `url` if it exists, otherwise `null`
 }
 
-for await (const resolution of resolve('./file.js', new URL('file:///directory/'), readPackage)) {
+for await (const resolution of resolve(
+  './file.js',
+  new URL('file:///directory/'),
+  readPackage
+)) {
   console.log(resolution)
 }
 ```
@@ -111,11 +119,11 @@ Options are the same as `resolve()` for all functions.
 2.  If `options.resolutions` is set:
     1.  If `preresolved(specifier, options.resolutions, parentURL, options)` returns `true`:
         1.  Return `true`.
-4.  If `url(specifier, parentURL, options)` returns `true`:
+3.  If `url(specifier, parentURL, options)` returns `true`:
     1.  Return `true`.
-5.  If `packageImports(specifier, parentURL, options)` returns `true`:
+4.  If `packageImports(specifier, parentURL, options)` returns `true`:
     1.  Return `true`.
-6.  If `specifier` equals `.` or `..`, or if `specifier` starts with `/`, `\`, `./`, `.\`, `../`, or `..\`:
+5.  If `specifier` equals `.` or `..`, or if `specifier` starts with `/`, `\`, `./`, `.\`, `../`, or `..\`:
     1.  If `options.imports` is set:
         1.  If `packageImportsExports(specifier, options.imports, parentURL, true, options)` returns `true`:
             1.  Return `true`.
@@ -125,7 +133,7 @@ Options are the same as `resolve()` for all functions.
     4.  If `directory(specifier, parentURL, options)` returns `true`:
         1.  Set `yielded` to `true`.
     5.  Return `yielded`.
-7.  Return `package(specifier, parentURL, options)`.
+6.  Return `package(specifier, parentURL, options)`.
 
 #### `const generator = resolve.url(url, parentURL[, options])`
 
@@ -226,7 +234,7 @@ Options are the same as `resolve()` for all functions.
     1.  If every key of `exports` starts with `.`:
         1.  If `packageImportsExports(subpath, exports, packageURL, false, options)` returns `true`:
             1.  Return `true`.
-3. Throw.
+3.  Throw.
 
 #### `const generator = resolve.packageImports(specifier, parentURL[, options])`
 
@@ -291,7 +299,7 @@ Options are the same as `resolve()` for all functions.
     2.  Otherwise:
         1.  Let `targetName` be the substring of `target` until the second `@` or the end of the string.
         2.  Let `targetVersion` be the substring of `target` from the character following the second `@` and to the end of string, or `null` if no such substring exists.
-    1.  If `packageSpecifier` equals `targetName`:
+    3.  If `packageSpecifier` equals `targetName`:
         1.  If `packageVersion` is `null` and `targetVersion` is `null`:
             1.  Yield `options.builtinProtocol` concatenated with `packageSpecifier` and return `true`.
         2.  Let `version` be `null`.
