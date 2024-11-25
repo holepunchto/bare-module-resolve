@@ -933,6 +933,80 @@ test('package.json#exports with conditions and subpath', (t) => {
   t.alike(result, ['file:///a/b/node_modules/d/e.js'])
 })
 
+test('package.json#exports with conditions and conditions matrix', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        exports: {
+          require: './e.cjs',
+          import: './e.mjs',
+          default: './e.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  const matched = []
+  const result = []
+
+  for (const resolution of resolve(
+    'd',
+    new URL('file:///a/b/c'),
+    { conditions: [['require'], ['import']], matchedConditions: matched },
+    readPackage
+  )) {
+    result.push([resolution.href, [...matched]])
+  }
+
+  t.alike(result, [
+    ['file:///a/b/node_modules/d/e.cjs', ['require']],
+    ['file:///a/b/node_modules/d/e.mjs', ['import']]
+  ])
+})
+
+test('package.json#exports with nested conditions and conditions matrix', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        exports: {
+          require: {
+            linux: './e.cjs',
+            darwin: './f.cjs'
+          },
+          import: './e.mjs',
+          default: './e.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  const matched = []
+  const result = []
+
+  for (const resolution of resolve(
+    'd',
+    new URL('file:///a/b/c'),
+    {
+      conditions: [['require', 'linux'], ['require', 'darwin'], ['import'], []],
+      matchedConditions: matched
+    },
+    readPackage
+  )) {
+    result.push([resolution.href, [...matched]])
+  }
+
+  t.alike(result, [
+    ['file:///a/b/node_modules/d/e.cjs', ['require', 'linux']],
+    ['file:///a/b/node_modules/d/f.cjs', ['require', 'darwin']],
+    ['file:///a/b/node_modules/d/e.mjs', ['import']],
+    ['file:///a/b/node_modules/d/e.js', ['default']]
+  ])
+})
+
 test('package.json#exports with self reference', (t) => {
   function readPackage(url) {
     if (url.href === 'file:///a/b/d/package.json') {
