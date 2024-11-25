@@ -53,7 +53,7 @@ Resolve `specifier` relative to `parentURL`, which must be a WHATWG `URL` instan
 Options include:
 
 ```js
-{
+options = {
   // A default "imports" map to apply to all specifiers. Follows the same
   // syntax and rules as the "imports" property defined in `package.json`.
   imports,
@@ -64,6 +64,9 @@ Options include:
   builtinProtocol: 'builtin:',
   // The supported import conditions. "default" is always recognized.
   conditions: [],
+  // An array reference which will contain the matched conditions when yielding
+  // resolutions.
+  matchedConditions: [],
   // The supported engine versions.
   engines: {},
   // The file extensions to look for. Must be provided to support extensionless
