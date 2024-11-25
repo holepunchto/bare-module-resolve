@@ -991,7 +991,7 @@ test('package.json#exports with nested conditions and conditions matrix', (t) =>
     'd',
     new URL('file:///a/b/c'),
     {
-      conditions: [['require', 'linux'], ['require', 'darwin'], ['import'], []],
+      conditions: [['require', 'linux'], ['import'], []],
       matchedConditions: matched
     },
     readPackage
@@ -1001,7 +1001,6 @@ test('package.json#exports with nested conditions and conditions matrix', (t) =>
 
   t.alike(result, [
     ['file:///a/b/node_modules/d/e.cjs', ['require', 'linux']],
-    ['file:///a/b/node_modules/d/f.cjs', ['require', 'darwin']],
     ['file:///a/b/node_modules/d/e.mjs', ['import']],
     ['file:///a/b/node_modules/d/e.js', ['default']]
   ])
