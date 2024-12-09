@@ -954,7 +954,10 @@ test('package.json#exports with conditions and conditions matrix', (t) => {
   for (const resolution of resolve(
     'd',
     new URL('file:///a/b/c'),
-    { conditions: [['require'], ['import']], matchedConditions: matched },
+    {
+      conditions: [['require'], ['import'], []],
+      matchedConditions: matched
+    },
     readPackage
   )) {
     result.push([resolution.href, [...matched]])
@@ -962,7 +965,8 @@ test('package.json#exports with conditions and conditions matrix', (t) => {
 
   t.alike(result, [
     ['file:///a/b/node_modules/d/e.cjs', ['require']],
-    ['file:///a/b/node_modules/d/e.mjs', ['import']]
+    ['file:///a/b/node_modules/d/e.mjs', ['import']],
+    ['file:///a/b/node_modules/d/e.js', ['default']]
   ])
 })
 
