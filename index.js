@@ -529,7 +529,7 @@ exports.packageTarget = function* (
   isImports,
   opts = {}
 ) {
-  const { conditions = [] } = opts
+  const { conditions = [], matchedConditions = [] } = opts
 
   if (typeof target === 'string') {
     if (!target.startsWith('./') && !isImports) {
@@ -578,21 +578,31 @@ exports.packageTarget = function* (
       }
     }
   } else if (typeof target === 'object' && target !== null) {
-    const keys = Object.keys(target)
+    let yielded = false
 
-    for (const p of keys) {
-      if (p === 'default' || conditions.includes(p)) {
-        const targetValue = target[p]
+    for (const [condition, targetValue, subset] of exports.conditionMatches(
+      target,
+      conditions,
+      opts
+    )) {
+      matchedConditions.push(condition)
 
-        return yield* exports.packageTarget(
+      if (
+        yield* exports.packageTarget(
           packageURL,
           targetValue,
           patternMatch,
           isImports,
-          opts
+          { ...opts, conditions: subset }
         )
+      ) {
+        yielded = true
       }
+
+      matchedConditions.pop()
     }
+
+    if (yielded) return true
   }
 
   return false
@@ -604,7 +614,11 @@ exports.builtinTarget = function* (
   target,
   opts = {}
 ) {
-  const { builtinProtocol = 'builtin:', conditions = [] } = opts
+  const {
+    builtinProtocol = 'builtin:',
+    conditions = [],
+    matchedConditions = []
+  } = opts
 
   if (typeof target === 'string') {
     const targetParts = target.split('@')
@@ -659,23 +673,63 @@ exports.builtinTarget = function* (
       }
     }
   } else if (typeof target === 'object' && target !== null) {
-    const keys = Object.keys(target)
+    let yielded = false
 
-    for (const p of keys) {
-      if (p === 'default' || conditions.includes(p)) {
-        const targetValue = target[p]
+    for (const [condition, targetValue, subset] of exports.conditionMatches(
+      target,
+      conditions,
+      opts
+    )) {
+      matchedConditions.push(condition)
 
-        return yield* exports.builtinTarget(
+      if (
+        yield* exports.builtinTarget(
           packageSpecifier,
           packageVersion,
           targetValue,
-          opts
+          { ...opts, conditions: subset }
         )
+      ) {
+        yielded = true
       }
+
+      matchedConditions.pop()
     }
+
+    if (yielded) return true
   }
 
   return false
+}
+
+exports.conditionMatches = function* conditionMatches(
+  target,
+  conditions,
+  opts = {}
+) {
+  if (conditions.every((condition) => typeof condition === 'string')) {
+    const keys = Object.keys(target)
+
+    for (const condition of keys) {
+      if (condition === 'default' || conditions.includes(condition)) {
+        yield [condition, target[condition], conditions]
+
+        return true
+      }
+    }
+
+    return false
+  }
+
+  let yielded = false
+
+  for (const subset of conditions) {
+    if (yield* conditionMatches(target, subset, opts)) {
+      yielded = true
+    }
+  }
+
+  return yielded
 }
 
 exports.lookupPackageScope = function* lookupPackageScope(url, opts = {}) {
