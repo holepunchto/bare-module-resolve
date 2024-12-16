@@ -26,8 +26,7 @@ module.exports = exports = function resolve(
         if (value.package) {
           next = generator.next(readPackage(value.package))
         } else {
-          yield value.resolution
-          next = generator.next()
+          next = generator.next(yield value.resolution)
         }
       }
 
@@ -45,8 +44,7 @@ module.exports = exports = function resolve(
         if (value.package) {
           next = generator.next(await readPackage(value.package))
         } else {
-          yield value.resolution
-          next = generator.next()
+          next = generator.next(yield value.resolution)
         }
       }
 
@@ -59,6 +57,19 @@ function defaultReadPackage() {
   return null
 }
 
+// No resolution candidate was yielded
+const UNRESOLVED = 0x0
+// At least 1 resolution candidate was yielded
+const YIELDED = 0x1
+// At least 1 resolution candidate was yielded and resolved
+const RESOLVED = YIELDED | 0x2
+
+exports.constants = {
+  UNRESOLVED,
+  YIELDED,
+  RESOLVED
+}
+
 exports.module = function* (specifier, parentURL, opts = {}) {
   const { resolutions = null, imports = null } = opts
 
@@ -66,19 +77,21 @@ exports.module = function* (specifier, parentURL, opts = {}) {
     specifier = '/' + specifier
   }
 
+  let status
+
   if (resolutions) {
-    if (yield* exports.preresolved(specifier, resolutions, parentURL, opts)) {
-      return true
-    }
+    status = yield* exports.preresolved(specifier, resolutions, parentURL, opts)
+
+    if (status) return status
   }
 
-  if (yield* exports.url(specifier, parentURL, opts)) {
-    return true
-  }
+  status = yield* exports.url(specifier, parentURL, opts)
 
-  if (yield* exports.packageImports(specifier, parentURL, opts)) {
-    return true
-  }
+  if (status) return status
+
+  status = yield* exports.packageImports(specifier, parentURL, opts)
+
+  if (status) return status
 
   if (
     specifier === '.' ||
@@ -91,30 +104,22 @@ exports.module = function* (specifier, parentURL, opts = {}) {
     specifier.startsWith('..\\')
   ) {
     if (imports) {
-      if (
-        yield* exports.packageImportsExports(
-          specifier,
-          imports,
-          parentURL,
-          true,
-          opts
-        )
-      ) {
-        return true
-      }
+      status = yield* exports.packageImportsExports(
+        specifier,
+        imports,
+        parentURL,
+        true,
+        opts
+      )
+
+      if (status) return status
     }
 
-    let yielded = false
+    status = yield* exports.file(specifier, parentURL, false, opts)
 
-    if (yield* exports.file(specifier, parentURL, false, opts)) {
-      yielded = true
-    }
+    if (status === RESOLVED) return status
 
-    if (yield* exports.directory(specifier, parentURL, opts)) {
-      yielded = true
-    }
-
-    return yielded
+    return yield* exports.directory(specifier, parentURL, opts)
   }
 
   return yield* exports.package(specifier, parentURL, opts)
@@ -127,21 +132,19 @@ exports.url = function* (url, parentURL, opts = {}) {
   try {
     resolution = new URL(url)
   } catch {
-    return false
+    return UNRESOLVED
   }
 
   if (imports) {
-    if (
-      yield* exports.packageImportsExports(
-        resolution.href,
-        imports,
-        parentURL,
-        true,
-        opts
-      )
-    ) {
-      return true
-    }
+    const status = yield* exports.packageImportsExports(
+      resolution.href,
+      imports,
+      parentURL,
+      true,
+      opts
+    )
+
+    if (status) return status
   }
 
   if (resolution.protocol === 'node:') {
@@ -162,9 +165,9 @@ exports.url = function* (url, parentURL, opts = {}) {
     return yield* exports.package(specifier, parentURL, opts)
   }
 
-  yield { resolution }
+  const resolved = yield { resolution }
 
-  return true
+  return resolved ? RESOLVED : YIELDED
 }
 
 exports.preresolved = function* (specifier, resolutions, parentURL, opts = {}) {
@@ -180,7 +183,7 @@ exports.preresolved = function* (specifier, resolutions, parentURL, opts = {}) {
     )
   }
 
-  return false
+  return UNRESOLVED
 }
 
 exports.package = function* (packageSpecifier, parentURL, opts = {}) {
@@ -216,17 +219,22 @@ exports.package = function* (packageSpecifier, parentURL, opts = {}) {
     )
   }
 
-  if (yield* exports.builtinTarget(packageSpecifier, null, builtins, opts)) {
-    return true
-  }
+  let status
+
+  status = yield* exports.builtinTarget(packageSpecifier, null, builtins, opts)
+
+  if (status) return status
 
   let packageSubpath = '.' + packageSpecifier.substring(packageName.length)
 
-  if (
-    yield* exports.packageSelf(packageName, packageSubpath, parentURL, opts)
-  ) {
-    return true
-  }
+  status = yield* exports.packageSelf(
+    packageName,
+    packageSubpath,
+    parentURL,
+    opts
+  )
+
+  if (status) return status
 
   parentURL = new URL(parentURL.href)
 
@@ -260,21 +268,15 @@ exports.package = function* (packageSpecifier, parentURL, opts = {}) {
         }
       }
 
-      let yielded = false
+      status = yield* exports.file(packageSubpath, packageURL, false, opts)
 
-      if (yield* exports.file(packageSubpath, packageURL, false, opts)) {
-        yielded = true
-      }
+      if (status === RESOLVED) return status
 
-      if (yield* exports.directory(packageSubpath, packageURL, opts)) {
-        yielded = true
-      }
-
-      return yielded
+      return yield* exports.directory(packageSubpath, packageURL, opts)
     }
   } while (parentURL.pathname !== '' && parentURL.pathname !== '/')
 
-  return false
+  return UNRESOLVED
 }
 
 exports.packageSelf = function* (
@@ -306,21 +308,20 @@ exports.packageSelf = function* (
         }
       }
 
-      let yielded = false
+      const status = yield* exports.file(
+        packageSubpath,
+        packageURL,
+        false,
+        opts
+      )
 
-      if (yield* exports.file(packageSubpath, packageURL, false, opts)) {
-        yielded = true
-      }
+      if (status === RESOLVED) return status
 
-      if (yield* exports.directory(packageSubpath, packageURL, opts)) {
-        yielded = true
-      }
-
-      return yielded
+      return yield* exports.directory(packageSubpath, packageURL, opts)
     }
   }
 
-  return false
+  return UNRESOLVED
 }
 
 exports.packageExports = function* (
@@ -345,27 +346,29 @@ exports.packageExports = function* (
     }
 
     if (mainExport) {
-      if (
-        yield* exports.packageTarget(packageURL, mainExport, null, false, opts)
-      ) {
-        return true
-      }
+      const status = yield* exports.packageTarget(
+        packageURL,
+        mainExport,
+        null,
+        false,
+        opts
+      )
+
+      if (status) return status
     }
   } else if (typeof packageExports === 'object' && packageExports !== null) {
     const keys = Object.keys(packageExports)
 
     if (keys.every((key) => key.startsWith('.'))) {
-      if (
-        yield* exports.packageImportsExports(
-          subpath,
-          packageExports,
-          packageURL,
-          false,
-          opts
-        )
-      ) {
-        return true
-      }
+      const status = yield* exports.packageImportsExports(
+        subpath,
+        packageExports,
+        packageURL,
+        false,
+        opts
+      )
+
+      if (status) return status
     }
   }
 
@@ -390,17 +393,15 @@ exports.packageImports = function* (specifier, parentURL, opts = {}) {
 
     if (info) {
       if (info.imports) {
-        if (
-          yield* exports.packageImportsExports(
-            specifier,
-            info.imports,
-            packageURL,
-            true,
-            opts
-          )
-        ) {
-          return true
-        }
+        const status = yield* exports.packageImportsExports(
+          specifier,
+          info.imports,
+          packageURL,
+          true,
+          opts
+        )
+
+        if (status) return status
       }
 
       if (specifier.startsWith('#')) {
@@ -414,20 +415,18 @@ exports.packageImports = function* (specifier, parentURL, opts = {}) {
   }
 
   if (imports) {
-    if (
-      yield* exports.packageImportsExports(
-        specifier,
-        imports,
-        parentURL,
-        true,
-        opts
-      )
-    ) {
-      return true
-    }
+    const status = yield* exports.packageImportsExports(
+      specifier,
+      imports,
+      parentURL,
+      true,
+      opts
+    )
+
+    if (status) return status
   }
 
-  return false
+  return UNRESOLVED
 }
 
 exports.packageImportsExports = function* (
@@ -483,7 +482,7 @@ exports.packageImportsExports = function* (
     }
   }
 
-  return false
+  return UNRESOLVED
 }
 
 exports.validateEngines = function validateEngines(
@@ -544,9 +543,9 @@ exports.packageTarget = function* (
       target = target.replaceAll('*', patternMatch)
     }
 
-    if (yield* exports.url(target, packageURL, opts)) {
-      return true
-    }
+    const status = yield* exports.url(target, packageURL, opts)
+
+    if (status) return status
 
     if (
       target === '.' ||
@@ -555,9 +554,9 @@ exports.packageTarget = function* (
       target.startsWith('./') ||
       target.startsWith('../')
     ) {
-      yield { resolution: new URL(target, packageURL) }
+      const resolved = yield { resolution: new URL(target, packageURL) }
 
-      return true
+      return resolved ? RESOLVED : YIELDED
     }
 
     return yield* exports.package(target, packageURL, opts)
@@ -565,20 +564,18 @@ exports.packageTarget = function* (
 
   if (Array.isArray(target)) {
     for (const targetValue of target) {
-      if (
-        yield* exports.packageTarget(
-          packageURL,
-          targetValue,
-          patternMatch,
-          isImports,
-          opts
-        )
-      ) {
-        return true
-      }
+      const status = yield* exports.packageTarget(
+        packageURL,
+        targetValue,
+        patternMatch,
+        isImports,
+        opts
+      )
+
+      if (status) return status
     }
   } else if (typeof target === 'object' && target !== null) {
-    let yielded = false
+    let status = UNRESOLVED
 
     for (const [condition, targetValue, subset] of exports.conditionMatches(
       target,
@@ -587,25 +584,21 @@ exports.packageTarget = function* (
     )) {
       matchedConditions.push(condition)
 
-      if (
-        yield* exports.packageTarget(
-          packageURL,
-          targetValue,
-          patternMatch,
-          isImports,
-          { ...opts, conditions: subset }
-        )
-      ) {
-        yielded = true
-      }
+      status |= yield* exports.packageTarget(
+        packageURL,
+        targetValue,
+        patternMatch,
+        isImports,
+        { ...opts, conditions: subset }
+      )
 
       matchedConditions.pop()
     }
 
-    if (yielded) return true
+    if (status) return status
   }
 
-  return false
+  return UNRESOLVED
 }
 
 exports.builtinTarget = function* (
@@ -636,9 +629,11 @@ exports.builtinTarget = function* (
 
     if (packageSpecifier === targetName) {
       if (packageVersion === null && targetVersion === null) {
-        yield { resolution: new URL(builtinProtocol + packageSpecifier) }
+        const resolved = yield {
+          resolution: new URL(builtinProtocol + packageSpecifier)
+        }
 
-        return true
+        return resolved ? RESOLVED : YIELDED
       }
 
       let version = null
@@ -650,30 +645,28 @@ exports.builtinTarget = function* (
       }
 
       if (version !== null) {
-        yield {
+        const resolved = yield {
           resolution: new URL(
             builtinProtocol + packageSpecifier + '@' + version
           )
         }
 
-        return true
+        return resolved ? RESOLVED : YIELDED
       }
     }
   } else if (Array.isArray(target)) {
     for (const targetValue of target) {
-      if (
-        yield* exports.builtinTarget(
-          packageSpecifier,
-          packageVersion,
-          targetValue,
-          opts
-        )
-      ) {
-        return true
-      }
+      const status = yield* exports.builtinTarget(
+        packageSpecifier,
+        packageVersion,
+        targetValue,
+        opts
+      )
+
+      if (status) return status
     }
   } else if (typeof target === 'object' && target !== null) {
-    let yielded = false
+    let status = UNRESOLVED
 
     for (const [condition, targetValue, subset] of exports.conditionMatches(
       target,
@@ -682,24 +675,20 @@ exports.builtinTarget = function* (
     )) {
       matchedConditions.push(condition)
 
-      if (
-        yield* exports.builtinTarget(
-          packageSpecifier,
-          packageVersion,
-          targetValue,
-          { ...opts, conditions: subset }
-        )
-      ) {
-        yielded = true
-      }
+      status |= yield* exports.builtinTarget(
+        packageSpecifier,
+        packageVersion,
+        targetValue,
+        { ...opts, conditions: subset }
+      )
 
       matchedConditions.pop()
     }
 
-    if (yielded) return true
+    if (status) return status
   }
 
-  return false
+  return UNRESOLVED
 }
 
 exports.conditionMatches = function* conditionMatches(
@@ -772,8 +761,9 @@ exports.lookupPackageScope = function* lookupPackageScope(url, opts = {}) {
     if (
       scopeURL.pathname.length === 3 &&
       exports.isWindowsDriveLetter(scopeURL.pathname.substring(1))
-    )
+    ) {
       break
+    }
   } while (scopeURL.pathname !== '' && scopeURL.pathname !== '/')
 }
 
@@ -783,8 +773,9 @@ exports.file = function* (filename, parentURL, isIndex, opts = {}) {
     filename === '..' ||
     filename[filename.length - 1] === '/' ||
     filename[filename.length - 1] === '\\'
-  )
-    return false
+  ) {
+    return UNRESOLVED
+  }
 
   if (parentURL.protocol === 'file:' && /%2f|%5c/i.test(filename)) {
     throw errors.INVALID_MODULE_SPECIFIER(
@@ -794,15 +785,25 @@ exports.file = function* (filename, parentURL, isIndex, opts = {}) {
 
   const { extensions = [] } = opts
 
+  let status = UNRESOLVED
+
   if (!isIndex) {
-    yield { resolution: new URL(filename, parentURL) }
+    if (yield { resolution: new URL(filename, parentURL) }) {
+      return RESOLVED
+    }
+
+    status = YIELDED
   }
 
   for (const ext of extensions) {
-    yield { resolution: new URL(filename + ext, parentURL) }
+    if (yield { resolution: new URL(filename + ext, parentURL) }) {
+      return RESOLVED
+    }
+
+    status = YIELDED
   }
 
-  return !isIndex || extensions.length > 0
+  return status
 }
 
 exports.directory = function* (dirname, parentURL, opts = {}) {
@@ -830,17 +831,11 @@ exports.directory = function* (dirname, parentURL, opts = {}) {
     }
 
     if (typeof info.main === 'string' && info.main !== '') {
-      let yielded = false
+      const status = yield* exports.file(info.main, directoryURL, false, opts)
 
-      if (yield* exports.file(info.main, directoryURL, false, opts)) {
-        yielded = true
-      }
+      if (status === RESOLVED) return status
 
-      if (yield* exports.directory(info.main, directoryURL, opts)) {
-        yielded = true
-      }
-
-      return yielded
+      return yield* exports.directory(info.main, directoryURL, opts)
     }
   }
 
