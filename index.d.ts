@@ -75,7 +75,8 @@ declare namespace resolve {
   }
 
   export type Resolver = Generator<
-    { package: URL } | { resolution: URL },
+    | { package: URL; resolution: undefined }
+    | { package: undefined; resolution: URL },
     number,
     void | boolean | JSON | null
   >
