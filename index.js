@@ -128,12 +128,9 @@ exports.module = function* (specifier, parentURL, opts = {}) {
 exports.url = function* (url, parentURL, opts = {}) {
   const { imports = null } = opts
 
-  let resolution
-  try {
-    resolution = new URL(url)
-  } catch {
-    return UNRESOLVED
-  }
+  const resolution = URL.parse(url)
+
+  if (resolution === null) return UNRESOLVED
 
   if (imports) {
     const status = yield* exports.packageImportsExports(
