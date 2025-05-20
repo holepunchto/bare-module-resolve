@@ -62,6 +62,11 @@ options = {
   builtins: [],
   // The protocol to use for resolved builtin module specifiers.
   builtinProtocol: 'builtin:',
+  // A list of module specifiers whose resolution should be deferred. If matched,
+  // the protocol of the resolved URL will be `deferredProtocol`.
+  defer: [],
+  // The protocol to use for resolved deferred module specifiers.
+  deferredProtocol: 'deferred:',
   // The supported import conditions. "default" is always recognized.
   conditions: [],
   // An array reference which will contain the matched conditions when yielding
