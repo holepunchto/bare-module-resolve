@@ -1525,9 +1525,7 @@ test('resolve deferred bare specifier', (t) => {
   for (const resolution of resolve(
     'deferred:d',
     new URL('file:///a/b/c'),
-    {
-      extensions: ['.js']
-    },
+    { extensions: ['.js'] },
     readPackage
   )) {
     result.push(resolution.href)
