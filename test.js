@@ -1498,6 +1498,24 @@ test('defer bare specifier', (t) => {
   t.alike(result, ['deferred:d'])
 })
 
+test('defer bare specifier with imports override', (t) => {
+  const imports = {
+    d: 'e'
+  }
+
+  const result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), {
+    extensions: ['.js'],
+    defer: ['e'],
+    imports
+  })) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['deferred:e'])
+})
+
 test('defer deferred bare specifier', (t) => {
   const result = []
 
@@ -1534,22 +1552,33 @@ test('resolve deferred bare specifier', (t) => {
   t.alike(result, ['file:///a/b/node_modules/d/index.js'])
 })
 
-test('defer bare specifier with imports override', (t) => {
-  const imports = {
-    d: 'e'
+test('resolve deferred bare specifier with resolutions map', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/node_modules/e/package.json') {
+      return {}
+    }
+
+    return null
+  }
+
+  const resolutions = {
+    'file:///a/b/c': {
+      d: 'deferred:e'
+    }
   }
 
   const result = []
 
-  for (const resolution of resolve('d', new URL('file:///a/b/c'), {
-    extensions: ['.js'],
-    defer: ['e'],
-    imports
-  })) {
+  for (const resolution of resolve(
+    'd',
+    new URL('file:///a/b/c'),
+    { extensions: ['.js'], resolutions },
+    readPackage
+  )) {
     result.push(resolution.href)
   }
 
-  t.alike(result, ['deferred:e'])
+  t.alike(result, ['file:///a/b/node_modules/e/index.js'])
 })
 
 test('node: protocol', (t) => {
