@@ -159,6 +159,33 @@ test('bare specifier with packge.json#imports', (t) => {
   t.alike(result, ['file:///a/b/node_modules/d/g.js'])
 })
 
+test('bare specifier with packge.json#imports, package relative', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        imports: {
+          g: './h.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve(
+    'g',
+    new URL('file:///a/b/node_modules/d/e/f.js'),
+    { extensions: ['.js'] },
+    readPackage
+  )) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/h.js'])
+})
+
 test('bare specifier with packge.json#imports, map to builtin', (t) => {
   function readPackage(url) {
     if (url.href === 'file:///a/b/node_modules/d/package.json') {
