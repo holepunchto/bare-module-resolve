@@ -759,17 +759,6 @@ exports.lookupPackageScope = function* lookupPackageScope(url, opts = {}) {
     )) {
       if (resolution) return yield resolution
     }
-
-    // Internal preresolution path, do not depend on this! It will be removed without
-    // warning.
-    for (const { resolution } of exports.preresolved(
-      'bare:package',
-      resolutions,
-      url,
-      opts
-    )) {
-      if (resolution) return yield resolution
-    }
   }
 
   const scopeURL = new URL(url.href)
