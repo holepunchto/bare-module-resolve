@@ -811,6 +811,8 @@ exports.file = function* (filename, parentURL, isIndex, opts = {}) {
   }
 
   for (const ext of extensions) {
+    if (filename.endsWith(ext)) continue
+
     if (yield { resolution: new URL(filename + ext, parentURL) }) {
       return RESOLVED
     }

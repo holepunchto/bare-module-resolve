@@ -335,7 +335,8 @@ Options are the same as `resolve()` for all functions.
 3.  If `isIndex` is `false`:
     1.  Yield the resolution of `filename` relative to `parentURL`.
 4.  For each value `ext` of `options.extensions`:
-    1.  Yield the resolution of `filename` concatenated with `ext` relative to `parentURL`.
+    1.  If `filename` ends with `ext`, continue.
+    2.  Yield the resolution of `filename` concatenated with `ext` relative to `parentURL`.
 
 #### `const generator = resolve.directory(dirname, parentURL[, options])`
 

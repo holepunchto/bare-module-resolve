@@ -73,7 +73,6 @@ test('bare specifier with subpath and extension', (t) => {
 
   t.alike(result, [
     'file:///a/b/node_modules/d/e.js',
-    'file:///a/b/node_modules/d/e.js.js',
     'file:///a/b/node_modules/d/e.js/index.js'
   ])
 })
@@ -404,11 +403,7 @@ test('relative specifier with extension', (t) => {
     result.push(resolution.href)
   }
 
-  t.alike(result, [
-    'file:///a/b/d.js',
-    'file:///a/b/d.js.js',
-    'file:///a/b/d.js/index.js'
-  ])
+  t.alike(result, ['file:///a/b/d.js', 'file:///a/b/d.js/index.js'])
 })
 
 test('relative specifier with extension and no default extensions', (t) => {
