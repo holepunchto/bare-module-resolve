@@ -1,12 +1,7 @@
 const { satisfies } = require('bare-semver')
 const errors = require('./lib/errors')
 
-module.exports = exports = function resolve(
-  specifier,
-  parentURL,
-  opts,
-  readPackage
-) {
+module.exports = exports = function resolve(specifier, parentURL, opts, readPackage) {
   if (typeof opts === 'function') {
     readPackage = opts
     opts = {}
@@ -104,13 +99,7 @@ exports.module = function* (specifier, parentURL, opts = {}) {
     specifier.startsWith('..\\')
   ) {
     if (imports) {
-      status = yield* exports.packageImportsExports(
-        specifier,
-        imports,
-        parentURL,
-        true,
-        opts
-      )
+      status = yield* exports.packageImportsExports(specifier, imports, parentURL, true, opts)
 
       if (status) return status
     }
@@ -167,9 +156,7 @@ exports.url = function* (url, parentURL, opts = {}) {
       specifier.startsWith('./') ||
       specifier.startsWith('../')
     ) {
-      throw errors.INVALID_MODULE_SPECIFIER(
-        `Module specifier '${url}' is not a valid package name`
-      )
+      throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${url}' is not a valid package name`)
     }
 
     return yield* exports.package(specifier, parentURL, opts)
@@ -184,13 +171,7 @@ exports.preresolved = function* (specifier, resolutions, parentURL, opts = {}) {
   const imports = resolutions[parentURL.href]
 
   if (typeof imports === 'object' && imports !== null) {
-    return yield* exports.packageImportsExports(
-      specifier,
-      imports,
-      parentURL,
-      true,
-      opts
-    )
+    return yield* exports.packageImportsExports(specifier, imports, parentURL, true, opts)
   }
 
   return UNRESOLVED
@@ -231,11 +212,7 @@ exports.package = function* (packageSpecifier, parentURL, opts = {}) {
     packageName = packageSpecifier.split('/', 2).join('/')
   }
 
-  if (
-    packageName[0] === '.' ||
-    packageName.includes('\\') ||
-    packageName.includes('%')
-  ) {
+  if (packageName[0] === '.' || packageName.includes('\\') || packageName.includes('%')) {
     throw errors.INVALID_MODULE_SPECIFIER(
       `Module specifier '${packageSpecifier}' is not a valid package name`
     )
@@ -253,12 +230,7 @@ exports.package = function* (packageSpecifier, parentURL, opts = {}) {
 
   let packageSubpath = '.' + packageSpecifier.substring(packageName.length)
 
-  status = yield* exports.packageSelf(
-    packageName,
-    packageSubpath,
-    parentURL,
-    opts
-  )
+  status = yield* exports.packageSelf(packageName, packageSubpath, parentURL, opts)
 
   if (status) return status
 
@@ -271,12 +243,7 @@ exports.package = function* (packageSpecifier, parentURL, opts = {}) {
       if (info.engines) exports.validateEngines(packageURL, info.engines, opts)
 
       if (info.exports) {
-        return yield* exports.packageExports(
-          packageURL,
-          packageSubpath,
-          info.exports,
-          opts
-        )
+        return yield* exports.packageExports(packageURL, packageSubpath, info.exports, opts)
       }
 
       if (packageSubpath === '.') {
@@ -298,12 +265,7 @@ exports.package = function* (packageSpecifier, parentURL, opts = {}) {
   return UNRESOLVED
 }
 
-exports.packageSelf = function* (
-  packageName,
-  packageSubpath,
-  parentURL,
-  opts = {}
-) {
+exports.packageSelf = function* (packageName, packageSubpath, parentURL, opts = {}) {
   for (const packageURL of exports.lookupPackageScope(parentURL, opts)) {
     const info = yield { package: packageURL }
 
@@ -311,12 +273,7 @@ exports.packageSelf = function* (
       if (info.name !== packageName) return false
 
       if (info.exports) {
-        return yield* exports.packageExports(
-          packageURL,
-          packageSubpath,
-          info.exports,
-          opts
-        )
+        return yield* exports.packageExports(packageURL, packageSubpath, info.exports, opts)
       }
 
       if (packageSubpath === '.') {
@@ -327,12 +284,7 @@ exports.packageSelf = function* (
         }
       }
 
-      const status = yield* exports.file(
-        packageSubpath,
-        packageURL,
-        false,
-        opts
-      )
+      const status = yield* exports.file(packageSubpath, packageURL, false, opts)
 
       if (status === RESOLVED) return status
 
@@ -343,12 +295,7 @@ exports.packageSelf = function* (
   return UNRESOLVED
 }
 
-exports.packageExports = function* (
-  packageURL,
-  subpath,
-  packageExports,
-  opts = {}
-) {
+exports.packageExports = function* (packageURL, subpath, packageExports, opts = {}) {
   if (subpath === '.') {
     let mainExport
 
@@ -365,13 +312,7 @@ exports.packageExports = function* (
     }
 
     if (mainExport) {
-      const status = yield* exports.packageTarget(
-        packageURL,
-        mainExport,
-        null,
-        false,
-        opts
-      )
+      const status = yield* exports.packageTarget(packageURL, mainExport, null, false, opts)
 
       if (status) return status
     }
@@ -432,13 +373,7 @@ exports.packageImports = function* (specifier, parentURL, opts = {}) {
   }
 
   if (imports) {
-    const status = yield* exports.packageImportsExports(
-      specifier,
-      imports,
-      parentURL,
-      true,
-      opts
-    )
+    const status = yield* exports.packageImportsExports(specifier, imports, parentURL, true, opts)
 
     if (status) return status
   }
@@ -456,13 +391,7 @@ exports.packageImportsExports = function* (
   if (matchKey in matchObject && !matchKey.includes('*')) {
     const target = matchObject[matchKey]
 
-    return yield* exports.packageTarget(
-      packageURL,
-      target,
-      null,
-      isImports,
-      opts
-    )
+    return yield* exports.packageTarget(packageURL, target, null, isImports, opts)
   }
 
   const expansionKeys = Object.keys(matchObject)
@@ -478,8 +407,7 @@ exports.packageImportsExports = function* (
 
       if (
         patternTrailer === '' ||
-        (matchKey.endsWith(patternTrailer) &&
-          matchKey.length >= expansionKey.length)
+        (matchKey.endsWith(patternTrailer) && matchKey.length >= expansionKey.length)
       ) {
         const target = matchObject[expansionKey]
 
@@ -488,13 +416,7 @@ exports.packageImportsExports = function* (
           matchKey.length - patternTrailer.length
         )
 
-        return yield* exports.packageTarget(
-          packageURL,
-          target,
-          patternMatch,
-          isImports,
-          opts
-        )
+        return yield* exports.packageTarget(packageURL, target, patternMatch, isImports, opts)
       }
     }
   }
@@ -502,11 +424,7 @@ exports.packageImportsExports = function* (
   return UNRESOLVED
 }
 
-exports.validateEngines = function validateEngines(
-  packageURL,
-  packageEngines,
-  opts = {}
-) {
+exports.validateEngines = function validateEngines(packageURL, packageEngines, opts = {}) {
   const { engines = {} } = opts
 
   for (const [engine, range] of Object.entries(packageEngines)) {
@@ -536,13 +454,7 @@ exports.patternKeyCompare = function patternKeyCompare(keyA, keyB) {
   return 0
 }
 
-exports.packageTarget = function* (
-  packageURL,
-  target,
-  patternMatch,
-  isImports,
-  opts = {}
-) {
+exports.packageTarget = function* (packageURL, target, patternMatch, isImports, opts = {}) {
   const { conditions = [], matchedConditions = [] } = opts
 
   if (typeof target === 'string') {
@@ -597,13 +509,10 @@ exports.packageTarget = function* (
     )) {
       matchedConditions.push(condition)
 
-      status |= yield* exports.packageTarget(
-        packageURL,
-        targetValue,
-        patternMatch,
-        isImports,
-        { ...opts, conditions: subset }
-      )
+      status |= yield* exports.packageTarget(packageURL, targetValue, patternMatch, isImports, {
+        ...opts,
+        conditions: subset
+      })
 
       matchedConditions.pop()
     }
@@ -614,17 +523,8 @@ exports.packageTarget = function* (
   return UNRESOLVED
 }
 
-exports.builtinTarget = function* (
-  packageSpecifier,
-  packageVersion,
-  target,
-  opts = {}
-) {
-  const {
-    builtinProtocol = 'builtin:',
-    conditions = [],
-    matchedConditions = []
-  } = opts
+exports.builtinTarget = function* (packageSpecifier, packageVersion, target, opts = {}) {
+  const { builtinProtocol = 'builtin:', conditions = [], matchedConditions = [] } = opts
 
   if (typeof target === 'string') {
     const targetParts = target.split('@')
@@ -659,9 +559,7 @@ exports.builtinTarget = function* (
 
       if (version !== null) {
         const resolved = yield {
-          resolution: new URL(
-            builtinProtocol + packageSpecifier + '@' + version
-          )
+          resolution: new URL(builtinProtocol + packageSpecifier + '@' + version)
         }
 
         return resolved ? RESOLVED : YIELDED
@@ -688,12 +586,10 @@ exports.builtinTarget = function* (
     )) {
       matchedConditions.push(condition)
 
-      status |= yield* exports.builtinTarget(
-        packageSpecifier,
-        packageVersion,
-        targetValue,
-        { ...opts, conditions: subset }
-      )
+      status |= yield* exports.builtinTarget(packageSpecifier, packageVersion, targetValue, {
+        ...opts,
+        conditions: subset
+      })
 
       matchedConditions.pop()
     }
@@ -704,11 +600,7 @@ exports.builtinTarget = function* (
   return UNRESOLVED
 }
 
-exports.conditionMatches = function* conditionMatches(
-  target,
-  conditions,
-  opts = {}
-) {
+exports.conditionMatches = function* conditionMatches(target, conditions, opts = {}) {
   if (conditions.every((condition) => typeof condition === 'string')) {
     const keys = Object.keys(target)
 
@@ -744,10 +636,7 @@ exports.lookupPackageRoot = function* (packageName, parentURL) {
 
     if (info) return info
 
-    parentURL.pathname = parentURL.pathname.substring(
-      0,
-      parentURL.pathname.lastIndexOf('/')
-    )
+    parentURL.pathname = parentURL.pathname.substring(0, parentURL.pathname.lastIndexOf('/'))
 
     if (
       parentURL.pathname.length === 3 &&
@@ -764,12 +653,7 @@ exports.lookupPackageScope = function* lookupPackageScope(scopeURL, opts = {}) {
   const { resolutions = null } = opts
 
   if (resolutions) {
-    for (const { resolution } of exports.preresolved(
-      '#package',
-      resolutions,
-      scopeURL,
-      opts
-    )) {
+    for (const { resolution } of exports.preresolved('#package', resolutions, scopeURL, opts)) {
       if (resolution) return yield resolution
     }
   }
@@ -783,10 +667,7 @@ exports.lookupPackageScope = function* lookupPackageScope(scopeURL, opts = {}) {
 
     if (info) return info
 
-    scopeURL.pathname = scopeURL.pathname.substring(
-      0,
-      scopeURL.pathname.lastIndexOf('/')
-    )
+    scopeURL.pathname = scopeURL.pathname.substring(0, scopeURL.pathname.lastIndexOf('/'))
 
     if (
       scopeURL.pathname.length === 3 &&
@@ -810,9 +691,7 @@ exports.file = function* (filename, parentURL, isIndex, opts = {}) {
   }
 
   if (parentURL.protocol === 'file:' && /%2f|%5c/i.test(filename)) {
-    throw errors.INVALID_MODULE_SPECIFIER(
-      `Module specifier '${filename}' is invalid`
-    )
+    throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${filename}' is invalid`)
   }
 
   const { extensions = [] } = opts
@@ -843,10 +722,7 @@ exports.file = function* (filename, parentURL, isIndex, opts = {}) {
 exports.directory = function* (dirname, parentURL, opts = {}) {
   let directoryURL
 
-  if (
-    dirname[dirname.length - 1] === '/' ||
-    dirname[dirname.length - 1] === '\\'
-  ) {
+  if (dirname[dirname.length - 1] === '/' || dirname[dirname.length - 1] === '\\') {
     directoryURL = new URL(dirname, parentURL)
   } else {
     directoryURL = new URL(dirname + '/', parentURL)
@@ -856,12 +732,7 @@ exports.directory = function* (dirname, parentURL, opts = {}) {
 
   if (info) {
     if (info.exports) {
-      return yield* exports.packageExports(
-        directoryURL,
-        '.',
-        info.exports,
-        opts
-      )
+      return yield* exports.packageExports(directoryURL, '.', info.exports, opts)
     }
 
     if (typeof info.main === 'string' && info.main !== '') {
@@ -901,9 +772,7 @@ exports.isWindowsDriveLetter = function isWindowsDriveLetter(input) {
 }
 
 // https://url.spec.whatwg.org/#start-with-a-windows-drive-letter
-exports.startsWithWindowsDriveLetter = function startsWithWindowsDriveLetter(
-  input
-) {
+exports.startsWithWindowsDriveLetter = function startsWithWindowsDriveLetter(input) {
   return (
     input.length >= 2 &&
     exports.isWindowsDriveLetter(input) &&

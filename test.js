@@ -71,10 +71,7 @@ test('bare specifier with subpath and extension', (t) => {
     result.push(resolution.href)
   }
 
-  t.alike(result, [
-    'file:///a/b/node_modules/d/e.js',
-    'file:///a/b/node_modules/d/e.js/index.js'
-  ])
+  t.alike(result, ['file:///a/b/node_modules/d/e.js', 'file:///a/b/node_modules/d/e.js/index.js'])
 })
 
 test('bare specifier with package.json#main', (t) => {
@@ -377,11 +374,7 @@ test('relative specifier', (t) => {
     result.push(resolution.href)
   }
 
-  t.alike(result, [
-    'file:///a/b/d',
-    'file:///a/b/d.js',
-    'file:///a/b/d/index.js'
-  ])
+  t.alike(result, ['file:///a/b/d', 'file:///a/b/d.js', 'file:///a/b/d/index.js'])
 })
 
 test('relative specifier with no default extensions', (t) => {
@@ -630,11 +623,7 @@ test('package.json#main with self reference', (t) => {
 
   const result = []
 
-  for (const resolution of resolve(
-    'd',
-    new URL('file:///a/b/d/'),
-    readPackage
-  )) {
+  for (const resolution of resolve('d', new URL('file:///a/b/d/'), readPackage)) {
     result.push(resolution.href)
   }
 
@@ -655,11 +644,7 @@ test('package.json#main with self reference and name mismatch', (t) => {
 
   const result = []
 
-  for (const resolution of resolve(
-    'd',
-    new URL('file:///a/b/d/'),
-    readPackage
-  )) {
+  for (const resolution of resolve('d', new URL('file:///a/b/d/'), readPackage)) {
     result.push(resolution.href)
   }
 
@@ -681,11 +666,7 @@ test('package.json#exports with expansion key', (t) => {
 
   const result = []
 
-  for (const resolution of resolve(
-    'd/e/g.js',
-    new URL('file:///a/b/c'),
-    readPackage
-  )) {
+  for (const resolution of resolve('d/e/g.js', new URL('file:///a/b/c'), readPackage)) {
     result.push(resolution.href)
   }
 
@@ -710,11 +691,7 @@ test('package.json#exports with multiple expansion key candidates', (t) => {
 
   let result = []
 
-  for (const resolution of resolve(
-    'd/e/g.js',
-    new URL('file:///a/b/c'),
-    readPackage
-  )) {
+  for (const resolution of resolve('d/e/g.js', new URL('file:///a/b/c'), readPackage)) {
     result.push(resolution.href)
   }
 
@@ -722,11 +699,7 @@ test('package.json#exports with multiple expansion key candidates', (t) => {
 
   result = []
 
-  for (const resolution of resolve(
-    'd/e/f/h.js',
-    new URL('file:///a/b/c'),
-    readPackage
-  )) {
+  for (const resolution of resolve('d/e/f/h.js', new URL('file:///a/b/c'), readPackage)) {
     result.push(resolution.href)
   }
 
@@ -734,11 +707,7 @@ test('package.json#exports with multiple expansion key candidates', (t) => {
 
   result = []
 
-  for (const resolution of resolve(
-    'd/f/g.es',
-    new URL('file:///a/b/c'),
-    readPackage
-  )) {
+  for (const resolution of resolve('d/f/g.es', new URL('file:///a/b/c'), readPackage)) {
     result.push(resolution.href)
   }
 
@@ -746,11 +715,7 @@ test('package.json#exports with multiple expansion key candidates', (t) => {
 
   result = []
 
-  for (const resolution of resolve(
-    'd/f/g.js',
-    new URL('file:///a/b/c'),
-    readPackage
-  )) {
+  for (const resolution of resolve('d/f/g.js', new URL('file:///a/b/c'), readPackage)) {
     result.push(resolution.href)
   }
 
@@ -800,11 +765,7 @@ test('package.json#exports with conditions', (t) => {
 
   result = []
 
-  for (const resolution of resolve(
-    'd',
-    new URL('file:///a/b/c'),
-    readPackage
-  )) {
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), readPackage)) {
     result.push(resolution.href)
   }
 
@@ -856,11 +817,7 @@ test('package.json#exports with conditions and array targets', (t) => {
 
   result = []
 
-  for (const resolution of resolve(
-    'd',
-    new URL('file:///a/b/c'),
-    readPackage
-  )) {
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), readPackage)) {
     result.push(resolution.href)
   }
 
@@ -884,11 +841,7 @@ test('package.json#exports with conditions and array targets with no match', (t)
   }
 
   try {
-    for (const resolution of resolve(
-      'd',
-      new URL('file:///a/b/c'),
-      readPackage
-    )) {
+    for (const resolution of resolve('d', new URL('file:///a/b/c'), readPackage)) {
       t.absent(resolution)
     }
 
@@ -944,11 +897,7 @@ test('package.json#exports with conditions and subpath', (t) => {
 
   result = []
 
-  for (const resolution of resolve(
-    'd/e',
-    new URL('file:///a/b/c'),
-    readPackage
-  )) {
+  for (const resolution of resolve('d/e', new URL('file:///a/b/c'), readPackage)) {
     result.push(resolution.href)
   }
 
@@ -1046,11 +995,7 @@ test('package.json#exports with self reference', (t) => {
 
   const result = []
 
-  for (const resolution of resolve(
-    'd',
-    new URL('file:///a/b/d/'),
-    readPackage
-  )) {
+  for (const resolution of resolve('d', new URL('file:///a/b/d/'), readPackage)) {
     result.push(resolution.href)
   }
 
@@ -1071,11 +1016,7 @@ test('package.json#exports with self reference and name mismatch', (t) => {
 
   const result = []
 
-  for (const resolution of resolve(
-    'd',
-    new URL('file:///a/b/d/'),
-    readPackage
-  )) {
+  for (const resolution of resolve('d', new URL('file:///a/b/d/'), readPackage)) {
     result.push(resolution.href)
   }
 
@@ -1097,11 +1038,7 @@ test('package.json#exports with unexported subpath', (t) => {
   }
 
   try {
-    for (const resolution of resolve(
-      'd/g',
-      new URL('file:///a/b/c'),
-      readPackage
-    )) {
+    for (const resolution of resolve('d/g', new URL('file:///a/b/c'), readPackage)) {
       t.absent(resolution)
     }
 
@@ -1127,11 +1064,7 @@ test('package.json#exports with invalid target', (t) => {
   }
 
   try {
-    for (const resolution of resolve(
-      'd',
-      new URL('file:///a/b/c'),
-      readPackage
-    )) {
+    for (const resolution of resolve('d', new URL('file:///a/b/c'), readPackage)) {
       t.absent(resolution)
     }
 
@@ -1157,11 +1090,7 @@ test('package.json#imports with expansion key', (t) => {
 
   const result = []
 
-  for (const resolution of resolve(
-    './e/g.js',
-    new URL('file:///a/b/d/'),
-    readPackage
-  )) {
+  for (const resolution of resolve('./e/g.js', new URL('file:///a/b/d/'), readPackage)) {
     result.push(resolution.href)
   }
 
@@ -1183,11 +1112,7 @@ test('package.json#imports with private key', (t) => {
 
   const result = []
 
-  for (const resolution of resolve(
-    '#e',
-    new URL('file:///a/b/d/'),
-    readPackage
-  )) {
+  for (const resolution of resolve('#e', new URL('file:///a/b/d/'), readPackage)) {
     result.push(resolution.href)
   }
 
@@ -1208,11 +1133,7 @@ test('package.json#imports with private key and no match', (t) => {
   }
 
   try {
-    for (const resolution of resolve(
-      '#f',
-      new URL('file:///a/b/d/'),
-      readPackage
-    )) {
+    for (const resolution of resolve('#f', new URL('file:///a/b/d/'), readPackage)) {
       t.absent(resolution)
     }
 
@@ -1262,11 +1183,7 @@ test('package.json#imports with private expansion key', (t) => {
 
   const result = []
 
-  for (const resolution of resolve(
-    '#e/g.js',
-    new URL('file:///a/b/d/'),
-    readPackage
-  )) {
+  for (const resolution of resolve('#e/g.js', new URL('file:///a/b/d/'), readPackage)) {
     result.push(resolution.href)
   }
 
@@ -1295,11 +1212,7 @@ test('package.json#main in scope with trailing slash', (t) => {
     result.push(resolution.href)
   }
 
-  t.alike(result, [
-    'file:///a/b/d',
-    'file:///a/b/d.js',
-    'file:///a/b/d/e/index.js'
-  ])
+  t.alike(result, ['file:///a/b/d', 'file:///a/b/d.js', 'file:///a/b/d/e/index.js'])
 })
 
 test('package.json#main in module with trailing slash', (t) => {
@@ -1468,12 +1381,7 @@ test('imports override with package.json#imports', (t) => {
 
   const result = []
 
-  for (const resolution of resolve(
-    './d',
-    new URL('file:///a/b/c/'),
-    { imports },
-    readPackage
-  )) {
+  for (const resolution of resolve('./d', new URL('file:///a/b/c/'), { imports }, readPackage)) {
     result.push(resolution.href)
   }
 
@@ -1493,18 +1401,11 @@ test('scoped package.json inside package', (t) => {
 
   const result = []
 
-  for (const resolution of resolve(
-    './e',
-    new URL('file:///a/b/node_modules/d/'),
-    readPackage
-  )) {
+  for (const resolution of resolve('./e', new URL('file:///a/b/node_modules/d/'), readPackage)) {
     result.push(resolution.href)
   }
 
-  t.alike(result, [
-    'file:///a/b/node_modules/d/e',
-    'file:///a/b/node_modules/d/e/f.js'
-  ])
+  t.alike(result, ['file:///a/b/node_modules/d/e', 'file:///a/b/node_modules/d/e/f.js'])
 })
 
 test('defer bare specifier', (t) => {
@@ -1616,11 +1517,7 @@ test('node: protocol', (t) => {
 
   const result = []
 
-  for (const resolution of resolve(
-    'node:d',
-    new URL('file:///a/b/c'),
-    readPackage
-  )) {
+  for (const resolution of resolve('node:d', new URL('file:///a/b/c'), readPackage)) {
     result.push(resolution.href)
   }
 

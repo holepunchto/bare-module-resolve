@@ -17,11 +17,7 @@ function readPackage(url) {
   // Read and parse `url` if it exists, otherwise `null`
 }
 
-for (const resolution of resolve(
-  './file.js',
-  new URL('file:///directory/'),
-  readPackage
-)) {
+for (const resolution of resolve('./file.js', new URL('file:///directory/'), readPackage)) {
   console.log(resolution)
 }
 ```
@@ -35,11 +31,7 @@ async function readPackage(url) {
   // Read and parse `url` if it exists, otherwise `null`
 }
 
-for await (const resolution of resolve(
-  './file.js',
-  new URL('file:///directory/'),
-  readPackage
-)) {
+for await (const resolution of resolve('./file.js', new URL('file:///directory/'), readPackage)) {
   console.log(resolution)
 }
 ```

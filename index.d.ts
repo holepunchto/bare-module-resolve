@@ -82,17 +82,9 @@ declare namespace resolve {
     void | boolean | JSON | null
   >
 
-  export function module(
-    specifier: string,
-    parentURL: URL,
-    opts?: ResolveOptions
-  ): Resolver
+  export function module(specifier: string, parentURL: URL, opts?: ResolveOptions): Resolver
 
-  export function url(
-    url: string,
-    parentURL: URL,
-    opts?: ResolveOptions
-  ): Resolver
+  export function url(url: string, parentURL: URL, opts?: ResolveOptions): Resolver
 
   export function preresolved(
     specifier: string,
@@ -101,11 +93,7 @@ declare namespace resolve {
     opts?: ResolveOptions
   ): Resolver
 
-  export function package(
-    packageSpecifier: string,
-    parentURL: URL,
-    opts?: ResolveOptions
-  ): Resolver
+  export function package(packageSpecifier: string, parentURL: URL, opts?: ResolveOptions): Resolver
 
   export function packageSelf(
     packageName: string,
@@ -121,11 +109,7 @@ declare namespace resolve {
     opts?: ResolveOptions
   ): Resolver
 
-  export function packageImports(
-    specifier: string,
-    parentURL: URL,
-    opts?: ResolveOptions
-  ): Resolver
+  export function packageImports(specifier: string, parentURL: URL, opts?: ResolveOptions): Resolver
 
   export function packageImportsExports(
     matchKey: string,
@@ -157,11 +141,7 @@ declare namespace resolve {
     opts?: ResolveOptions
   ): Resolver
 
-  export function directory(
-    dirname: string,
-    parentURL: URL,
-    opts?: ResolveOptions
-  ): Resolver
+  export function directory(dirname: string, parentURL: URL, opts?: ResolveOptions): Resolver
 }
 
 export = resolve
