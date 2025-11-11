@@ -264,15 +264,8 @@ exports.package = function* (packageSpecifier, parentURL, opts = {}) {
 
   parentURL = new URL(parentURL.href)
 
-  do {
-    const packageURL = new URL('node_modules/' + packageName + '/', parentURL)
-
-    parentURL.pathname = parentURL.pathname.substring(
-      0,
-      parentURL.pathname.lastIndexOf('/')
-    )
-
-    const info = yield { package: new URL('package.json', packageURL) }
+  for (const packageURL of exports.lookupPackageRoot(packageName, parentURL)) {
+    const info = yield { package: packageURL }
 
     if (info) {
       if (info.engines) exports.validateEngines(packageURL, info.engines, opts)
@@ -300,7 +293,7 @@ exports.package = function* (packageSpecifier, parentURL, opts = {}) {
 
       return yield* exports.directory(packageSubpath, packageURL, opts)
     }
-  } while (parentURL.pathname !== '' && parentURL.pathname !== '/')
+  }
 
   return UNRESOLVED
 }
@@ -397,8 +390,6 @@ exports.packageExports = function* (
       if (status) return status
     }
   }
-
-  packageURL = new URL('package.json', packageURL)
 
   throw errors.PACKAGE_PATH_NOT_EXPORTED(
     `Package subpath '${subpath}' is not defined by "exports" in '${packageURL}'`
@@ -523,8 +514,6 @@ exports.validateEngines = function validateEngines(
       const version = engines[engine]
 
       if (!satisfies(version, range)) {
-        packageURL = new URL('package.json', packageURL)
-
         throw errors.UNSUPPORTED_ENGINE(
           `Package not compatible with engine '${engine}' ${version}, requires range '${range}' defined by "engines" in '${packageURL}'`
         )
@@ -558,8 +547,6 @@ exports.packageTarget = function* (
 
   if (typeof target === 'string') {
     if (!target.startsWith('./') && !isImports) {
-      packageURL = new URL('package.json', packageURL)
-
       throw errors.INVALID_PACKAGE_TARGET(
         `Invalid target '${target}' defined by "exports" in '${packageURL}'`
       )
@@ -747,26 +734,54 @@ exports.conditionMatches = function* conditionMatches(
   return yielded
 }
 
-exports.lookupPackageScope = function* lookupPackageScope(url, opts = {}) {
+exports.lookupPackageRoot = function* (packageName, parentURL) {
+  parentURL = new URL(parentURL.href)
+
+  do {
+    const packageURL = new URL('node_modules/' + packageName + '/', parentURL)
+
+    const info = yield new URL('package.json', packageURL)
+
+    if (info) return info
+
+    parentURL.pathname = parentURL.pathname.substring(
+      0,
+      parentURL.pathname.lastIndexOf('/')
+    )
+
+    if (
+      parentURL.pathname.length === 3 &&
+      exports.isWindowsDriveLetter(parentURL.pathname.substring(1))
+    ) {
+      break
+    }
+  } while (parentURL.pathname !== '' && parentURL.pathname !== '/')
+
+  return null
+}
+
+exports.lookupPackageScope = function* lookupPackageScope(scopeURL, opts = {}) {
   const { resolutions = null } = opts
 
   if (resolutions) {
     for (const { resolution } of exports.preresolved(
       '#package',
       resolutions,
-      url,
+      scopeURL,
       opts
     )) {
       if (resolution) return yield resolution
     }
   }
 
-  const scopeURL = new URL(url.href)
+  scopeURL = new URL(scopeURL.href)
 
   do {
     if (scopeURL.pathname.endsWith('/node_modules')) break
 
-    yield new URL('package.json', scopeURL)
+    const info = yield new URL('package.json', scopeURL)
+
+    if (info) return info
 
     scopeURL.pathname = scopeURL.pathname.substring(
       0,
@@ -780,6 +795,8 @@ exports.lookupPackageScope = function* lookupPackageScope(url, opts = {}) {
       break
     }
   } while (scopeURL.pathname !== '' && scopeURL.pathname !== '/')
+
+  return null
 }
 
 exports.file = function* (filename, parentURL, isIndex, opts = {}) {
