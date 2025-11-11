@@ -203,7 +203,7 @@ Options are the same as `resolve()` for all functions.
 8.  Let `packageSubpath` be `.` concatenated with the substring of `packageSpecifier` from the position at the length of `packageName`.
 9.  If `packageSelf(packageName, packageSubpath, parentURL, options)` yields, return.
 10. For each value `packageURL` of `lookupPackageRoot(packageName, parentURL, options)`:
-    1.  Let `info` be the result of yielding the resolution of `package.json` relative to `packageURL`.
+    1.  Let `info` be the result of yielding `packageURL`.
     2.  If `info` is not `null`:
         1.  If `info.engines` is set:
             1.  Call `validateEngines(packageURL, info.engines, options)`.
