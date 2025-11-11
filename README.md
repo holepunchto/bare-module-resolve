@@ -202,11 +202,9 @@ Options are the same as `resolve()` for all functions.
 7.  If `deferred(packageSpecifier, options)` yields, return.
 8.  Let `packageSubpath` be `.` concatenated with the substring of `packageSpecifier` from the position at the length of `packageName`.
 9.  If `packageSelf(packageName, packageSubpath, parentURL, options)` yields, return.
-10. Repeat:
-    1.  Let `packageURL` be the resolution of `node_modules/` concatenated with `packageName` and `/` relative to `parentURL`.
-    2.  Set `parentURL` to the substring of `parentURL` until the last `/`.
-    3.  Let `info` be the result of yielding the resolution of `package.json` relative to `packageURL`.
-    4.  If `info` is not `null`:
+10. For each value `packageURL` of `lookupPackageRoot(packageName, parentURL, options)`:
+    1.  Let `info` be the result of yielding `packageURL`.
+    2.  If `info` is not `null`:
         1.  If `info.engines` is set:
             1.  Call `validateEngines(packageURL, info.engines, options)`.
         2.  If `info.exports` is set:
@@ -218,7 +216,6 @@ Options are the same as `resolve()` for all functions.
                 1.  Return `file('index', packageURL, true, options)`.
         4.  If `file(packageSubpath, packageURL, false, options)` resolves, return.
         5.  Return `directory(packageSubpath, packageURL, options)`.
-    5.  If `parentURL` is the file system root, return.
 
 #### `const generator = resolve.packageSelf(packageName, packageSubpath, parentURL[, options])`
 
@@ -258,7 +255,7 @@ Options are the same as `resolve()` for all functions.
 #### `const generator = resolve.packageImports(specifier, parentURL[, options])`
 
 1.  If `specifier` is `#` or starts with `#/`, throw.
-2.  For each value `packageURL` of `lookupPackageScope(parentURL, opions)`:
+2.  For each value `packageURL` of `lookupPackageScope(parentURL, options)`:
     1.  Let `info` be the result of yielding `packageURL`.
     2.  If `info` is not `null`:
         1.  If `info.imports` is set:
