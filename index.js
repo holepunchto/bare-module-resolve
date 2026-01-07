@@ -119,7 +119,7 @@ exports.module = function* (specifier, parentURL, opts = {}) {
 }
 
 exports.url = function* (url, parentURL, opts = {}) {
-  const { imports = null, deferredProtocol = 'deferred:' } = opts
+  const { imports = null, deferredProtocol = 'deferred:', resolutions = null } = opts
 
   let resolution
   try {
@@ -142,6 +142,17 @@ exports.url = function* (url, parentURL, opts = {}) {
 
   if (resolution.protocol === deferredProtocol) {
     const specifier = resolution.pathname
+
+    if (resolutions) {
+      const imports = resolutions[parentURL.href]
+
+      if (typeof imports === 'object' && imports !== null) {
+        opts = {
+          ...opts,
+          resolutions: { ...resolutions, [parentURL.href]: { ...imports, [specifier]: null } }
+        }
+      }
+    }
 
     return yield* exports.module(specifier, parentURL, opts)
   }

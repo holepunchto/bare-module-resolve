@@ -1504,6 +1504,35 @@ test('resolve deferred bare specifier with resolutions map', (t) => {
   t.alike(result, ['file:///a/b/node_modules/e/index.js'])
 })
 
+test('resolve cyclic deferred bare specifier with resolutions map', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {}
+    }
+
+    return null
+  }
+
+  const resolutions = {
+    'file:///a/b/c': {
+      d: 'deferred:d'
+    }
+  }
+
+  const result = []
+
+  for (const resolution of resolve(
+    'd',
+    new URL('file:///a/b/c'),
+    { extensions: ['.js'], resolutions },
+    readPackage
+  )) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/index.js'])
+})
+
 test('node: protocol', (t) => {
   function readPackage(url) {
     if (url.href === 'file:///a/b/node_modules/d/package.json') {

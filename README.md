@@ -162,7 +162,11 @@ Options are the same as `resolve()` for all functions.
     1.  If `packageImportsExports(url.href, options.imports, parentURL, true, options)` yields, return.
 3.  If `url.protocol` equals `options.deferredProtocol`:
     1.  Let `specifier` be `url.pathname`.
-    2.  Return `module(specifier, parentURL, options)`.
+    2.  If `options.resolutions` is set:
+        1.  Let `imports` be `options.resolutions[parentURL]`.
+        2.  If `imports` is a non-`null` object:
+            1.  Set `imports[specifier]` to `null`.
+    3.  Return `module(specifier, parentURL, options)`.
 4.  If `url.protocol` equals `node:`:
     1.  Let `specifier` be `url.pathname`.
     2.  If `specifier` equals `.` or `..`, or if `specifier` starts with `/`, `\`, `./`, `.\`, `../`, or `..\`, throw.
