@@ -1567,6 +1567,31 @@ test('node: protocol with invalid package name', (t) => {
   t.exception(() => [...resolve('node:/d/', new URL('file:///a/b/c'))])
 })
 
+test('node: protocol with cyclic imports map', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        main: 'e.js'
+      }
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve(
+    'node:d',
+    new URL('file:///a/b/c'),
+    { imports: { 'node:d': 'node:d' } },
+    readPackage
+  )) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/e.js'])
+})
+
 test('engines with valid range', (t) => {
   function readPackage(url) {
     if (url.href === 'file:///a/b/node_modules/d/package.json') {
