@@ -64,6 +64,9 @@ options = {
   // An array reference which will contain the matched conditions when yielding
   // resolutions.
   matchedConditions: [],
+  // An array reference which will contain the matched targets when yielding
+  // remapped specifiers., such as those from resolution or import maps.
+  matchedTargets: [],
   // The supported engine versions.
   engines: {},
   // The file extensions to look for. Must be provided to support extensionless
@@ -282,10 +285,11 @@ Options are the same as `resolve()` for all functions.
     1.  If `target` does not start with `./` and `isImports` is `false`, throw.
     2.  If `patternMatch` is not `null`:
         1.  Replace every instance of `*` in `target` with `patternMatch`.
-    3.  If `url(target, packageURL, options)` yields, return.
-    4.  If `target` equals `.` or `..`, or if `target` starts with `/`, `./`, or `../`:
+    3.  If `target` forms a cycle with a previous `target` in the same resolution chain, return.
+    4.  If `url(target, packageURL, options)` yields, return.
+    5.  If `target` equals `.` or `..`, or if `target` starts with `/`, `./`, or `../`:
         1.  Yield the resolution of `target` relative to `packageURL` and return.
-    5.  Return `package(target, packageURL, options)`.
+    6.  Return `package(target, packageURL, options)`.
 2.  If `target` is an array:
     1.  For each value `targetValue` of `target`:
         1.  If `packageTarget(packageURL, targetValue, patternMatch, isImports, options)` yields, return.
