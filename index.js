@@ -58,11 +58,14 @@ const UNRESOLVED = 0x0
 const YIELDED = 0x1
 // At least 1 resolution candidate was yielded and resolved
 const RESOLVED = YIELDED | 0x2
+// A resolution cycle was detected
+const CYCLIC = 0x4
 
 exports.constants = {
   UNRESOLVED,
   YIELDED,
-  RESOLVED
+  RESOLVED,
+  CYCLIC
 }
 
 exports.module = function* (specifier, parentURL, opts = {}) {
@@ -112,7 +115,13 @@ exports.module = function* (specifier, parentURL, opts = {}) {
 
     if (status === RESOLVED) return status
 
-    return yield* exports.directory(specifier, parentURL, opts)
+    const yielded = (status & YIELDED) !== 0
+
+    status = yield* exports.directory(specifier, parentURL, opts)
+
+    if (yielded) status |= YIELDED
+
+    return status
   }
 
   return yield* exports.package(specifier, parentURL, opts)
@@ -137,7 +146,7 @@ exports.url = function* (url, parentURL, opts = {}) {
       opts
     )
 
-    if (status) return status
+    if (status && (status & CYCLIC) === 0) return status
   }
 
   if (resolution.protocol === deferredProtocol) {
@@ -269,7 +278,13 @@ exports.package = function* (packageSpecifier, parentURL, opts = {}) {
 
       if (status === RESOLVED) return status
 
-      return yield* exports.directory(packageSubpath, packageURL, opts)
+      const yielded = (status & YIELDED) !== 0
+
+      status = yield* exports.directory(packageSubpath, packageURL, opts)
+
+      if (yielded) status |= YIELDED
+
+      return status
     }
   }
 
@@ -295,11 +310,17 @@ exports.packageSelf = function* (packageName, packageSubpath, parentURL, opts = 
         }
       }
 
-      const status = yield* exports.file(packageSubpath, packageURL, false, opts)
+      let status = yield* exports.file(packageSubpath, packageURL, false, opts)
 
       if (status === RESOLVED) return status
 
-      return yield* exports.directory(packageSubpath, packageURL, opts)
+      const yielded = (status & YIELDED) !== 0
+
+      status = yield* exports.directory(packageSubpath, packageURL, opts)
+
+      if (yielded) status |= YIELDED
+
+      return status
     }
   }
 
@@ -466,7 +487,9 @@ exports.patternKeyCompare = function patternKeyCompare(keyA, keyB) {
 }
 
 exports.packageTarget = function* (packageURL, target, patternMatch, isImports, opts = {}) {
-  const { conditions = [], matchedConditions = [] } = opts
+  const { conditions = [], matchedConditions = [], matchedTargets = [] } = opts
+
+  opts = { ...opts, matchedConditions, matchedTargets }
 
   if (typeof target === 'string') {
     if (!target.startsWith('./') && !isImports) {
@@ -479,9 +502,17 @@ exports.packageTarget = function* (packageURL, target, patternMatch, isImports, 
       target = target.replaceAll('*', patternMatch)
     }
 
-    const status = yield* exports.url(target, packageURL, opts)
+    if (matchedTargets.includes(target)) return CYCLIC
 
-    if (status) return status
+    matchedTargets.push(target)
+
+    let status = yield* exports.url(target, packageURL, opts)
+
+    if (status) {
+      matchedTargets.pop()
+
+      return status
+    }
 
     if (
       target === '.' ||
@@ -492,10 +523,16 @@ exports.packageTarget = function* (packageURL, target, patternMatch, isImports, 
     ) {
       const resolved = yield { resolution: new URL(target, packageURL) }
 
+      matchedTargets.pop()
+
       return resolved ? RESOLVED : YIELDED
     }
 
-    return yield* exports.package(target, packageURL, opts)
+    status = yield* exports.package(target, packageURL, opts)
+
+    matchedTargets.pop()
+
+    return status
   }
 
   if (Array.isArray(target)) {
@@ -536,6 +573,8 @@ exports.packageTarget = function* (packageURL, target, patternMatch, isImports, 
 
 exports.builtinTarget = function* (packageSpecifier, packageVersion, target, opts = {}) {
   const { builtinProtocol = 'builtin:', conditions = [], matchedConditions = [] } = opts
+
+  opts = { ...opts, matchedConditions }
 
   if (typeof target === 'string') {
     const targetParts = target.split('@')
@@ -747,11 +786,17 @@ exports.directory = function* (dirname, parentURL, opts = {}) {
     }
 
     if (typeof info.main === 'string' && info.main !== '') {
-      const status = yield* exports.file(info.main, directoryURL, false, opts)
+      let status = yield* exports.file(info.main, directoryURL, false, opts)
 
       if (status === RESOLVED) return status
 
-      return yield* exports.directory(info.main, directoryURL, opts)
+      const yielded = (status & YIELDED) !== 0
+
+      status = yield* exports.directory(info.main, directoryURL, opts)
+
+      if (yielded) status |= YIELDED
+
+      return status
     }
   }
 
