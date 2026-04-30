@@ -800,7 +800,7 @@ test('package.json#exports with conditions and array targets', (t) => {
     result.push(resolution.href)
   }
 
-  t.alike(result, ['file:///a/b/node_modules/d/e.cjs'])
+  t.alike(result, ['file:///a/b/node_modules/d/e.cjs', 'file:///a/b/node_modules/d/e.js'])
 
   result = []
 
@@ -813,7 +813,7 @@ test('package.json#exports with conditions and array targets', (t) => {
     result.push(resolution.href)
   }
 
-  t.alike(result, ['file:///a/b/node_modules/d/e.mjs'])
+  t.alike(result, ['file:///a/b/node_modules/d/e.mjs', 'file:///a/b/node_modules/d/e.js'])
 
   result = []
 
@@ -1095,6 +1095,28 @@ test('package.json#imports with expansion key', (t) => {
   }
 
   t.alike(result, ['file:///a/b/d/f/g.js'])
+})
+
+test('package.json#imports with multiple candidates', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/d/package.json') {
+      return {
+        imports: {
+          './e.js': ['./f.js', './g.js']
+        }
+      }
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve('./e.js', new URL('file:///a/b/d/'), readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/d/f.js', 'file:///a/b/d/g.js'])
 })
 
 test('package.json#imports with private key', (t) => {
