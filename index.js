@@ -536,18 +536,18 @@ exports.packageTarget = function* (packageURL, target, patternMatch, isImports, 
   }
 
   if (Array.isArray(target)) {
-    for (const targetValue of target) {
-      const status = yield* exports.packageTarget(
-        packageURL,
-        targetValue,
-        patternMatch,
-        isImports,
-        opts
-      )
+    let status = UNRESOLVED
 
-      if (status) return status
+    for (const targetValue of target) {
+      status |= yield* exports.packageTarget(packageURL, targetValue, patternMatch, isImports, opts)
+
+      if (status === RESOLVED) return status
     }
-  } else if (typeof target === 'object' && target !== null) {
+
+    return status
+  }
+
+  if (typeof target === 'object' && target !== null) {
     let status = UNRESOLVED
 
     for (const [condition, targetValue, subset] of exports.conditionMatches(
@@ -565,7 +565,7 @@ exports.packageTarget = function* (packageURL, target, patternMatch, isImports, 
       matchedConditions.pop()
     }
 
-    if (status) return status
+    return status
   }
 
   return UNRESOLVED
@@ -615,18 +615,23 @@ exports.builtinTarget = function* (packageSpecifier, packageVersion, target, opt
         return resolved ? RESOLVED : YIELDED
       }
     }
-  } else if (Array.isArray(target)) {
-    for (const targetValue of target) {
-      const status = yield* exports.builtinTarget(
-        packageSpecifier,
-        packageVersion,
-        targetValue,
-        opts
-      )
 
-      if (status) return status
+    return UNRESOLVED
+  }
+
+  if (Array.isArray(target)) {
+    let status = UNRESOLVED
+
+    for (const targetValue of target) {
+      status |= yield* exports.builtinTarget(packageSpecifier, packageVersion, targetValue, opts)
+
+      if (status === RESOLVED) return status
     }
-  } else if (typeof target === 'object' && target !== null) {
+
+    return status
+  }
+
+  if (typeof target === 'object' && target !== null) {
     let status = UNRESOLVED
 
     for (const [condition, targetValue, subset] of exports.conditionMatches(
@@ -644,7 +649,7 @@ exports.builtinTarget = function* (packageSpecifier, packageVersion, target, opt
       matchedConditions.pop()
     }
 
-    if (status) return status
+    return status
   }
 
   return UNRESOLVED

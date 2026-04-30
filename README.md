@@ -292,7 +292,7 @@ Options are the same as `resolve()` for all functions.
     6.  Return `package(target, packageURL, options)`.
 2.  If `target` is an array:
     1.  For each value `targetValue` of `target`:
-        1.  If `packageTarget(packageURL, targetValue, patternMatch, isImports, options)` yields, return.
+        1.  If `packageTarget(packageURL, targetValue, patternMatch, isImports, options)` resolves, return.
 3.  If `target` is a non-`null` object:
     1.  For each key `condition` of `target`:
         1.  If `condition` equals `default` or if `options.conditions` includes `condition`:
@@ -318,7 +318,7 @@ Options are the same as `resolve()` for all functions.
             1.  Yield `options.builtinProtocol` concatenated with `packageSpecifier`, `@`, and `version` and return.
 2.  If `target` is an array:
     1.  For each value `targetValue` of `target`:
-        1.  If `builtinTarget(packageSpecifier, packageVersion, targetValue, options)` yields, return.
+        1.  If `builtinTarget(packageSpecifier, packageVersion, targetValue, options)` resolves, return.
 3.  If `target` is a non-`null` object:
     1.  For each key `condition` of `target`:
         1.  If `condition` equals `default` or if `options.conditions` includes `condition`:
