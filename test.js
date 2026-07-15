@@ -1614,6 +1614,88 @@ test('node: protocol with cyclic imports map', (t) => {
   t.alike(result, ['file:///a/b/node_modules/d/e.js'])
 })
 
+test('relative specifier from data: URL', (t) => {
+  const result = []
+
+  for (const resolution of resolve(
+    './e',
+    new URL('data:text/javascript,export default 42'),
+    { extensions: ['.js'] }
+  )) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [])
+})
+
+test('bare specifier from data: URL', (t) => {
+  const result = []
+
+  for (const resolution of resolve(
+    'd',
+    new URL('data:text/javascript,export default 42'),
+    { extensions: ['.js'] }
+  )) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [])
+})
+
+test('bare specifier with builtin from data: URL', (t) => {
+  const result = []
+
+  for (const resolution of resolve(
+    'd',
+    new URL('data:text/javascript,export default 42'),
+    { extensions: ['.js'], builtins: ['d'] }
+  )) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['builtin:d'])
+})
+
+test('absolute specifier from data: URL', (t) => {
+  const result = []
+
+  for (const resolution of resolve(
+    'file:///e.js',
+    new URL('data:text/javascript,export default 42'),
+    { extensions: ['.js'] }
+  )) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///e.js'])
+})
+
+test('imports map with relative target from data: URL', (t) => {
+  const result = []
+
+  for (const resolution of resolve(
+    'd',
+    new URL('data:text/javascript,export default 42'),
+    { extensions: ['.js'], imports: { d: './e.js' } }
+  )) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [])
+})
+
+test('package scope lookup with data: URL', (t) => {
+  const result = []
+
+  for (const scope of resolve.lookupPackageScope(
+    new URL('data:text/javascript,export default 42')
+  )) {
+    result.push(scope.href)
+  }
+
+  t.alike(result, [])
+})
+
 test('engines with valid range', (t) => {
   function readPackage(url) {
     if (url.href === 'file:///a/b/node_modules/d/package.json') {
