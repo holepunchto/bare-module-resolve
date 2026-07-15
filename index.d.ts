@@ -1,9 +1,7 @@
 import URL from 'bare-url'
 
 type ConditionalSpecifier =
-  | string
-  | ConditionalSpecifier[]
-  | { [condition: string]: ConditionalSpecifier }
+  string | ConditionalSpecifier[] | { [condition: string]: ConditionalSpecifier }
 
 type ImportsMap = { [specifier: string]: ConditionalSpecifier }
 

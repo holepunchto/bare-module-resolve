@@ -521,6 +521,12 @@ exports.packageTarget = function* (packageURL, target, patternMatch, isImports, 
       target.startsWith('./') ||
       target.startsWith('../')
     ) {
+      if (hasOpaquePath(packageURL)) {
+        matchedTargets.pop()
+
+        return UNRESOLVED
+      }
+
       const resolved = yield { resolution: new URL(target, packageURL) }
 
       matchedTargets.pop()
@@ -682,6 +688,8 @@ exports.conditionMatches = function* conditionMatches(target, conditions, opts =
 }
 
 exports.lookupPackageRoot = function* (packageName, parentURL) {
+  if (hasOpaquePath(parentURL)) return null
+
   parentURL = new URL(parentURL.href)
 
   do {
@@ -712,6 +720,8 @@ exports.lookupPackageScope = function* lookupPackageScope(scopeURL, opts = {}) {
       if (resolution) return yield resolution
     }
   }
+
+  if (hasOpaquePath(scopeURL)) return null
 
   scopeURL = new URL(scopeURL.href)
 
@@ -745,6 +755,8 @@ exports.file = function* (filename, parentURL, isIndex, opts = {}) {
     return UNRESOLVED
   }
 
+  if (hasOpaquePath(parentURL)) return UNRESOLVED
+
   if (parentURL.protocol === 'file:' && /%2f|%5c/i.test(filename)) {
     throw errors.INVALID_MODULE_SPECIFIER(`Module specifier '${filename}' is invalid`)
   }
@@ -775,6 +787,8 @@ exports.file = function* (filename, parentURL, isIndex, opts = {}) {
 }
 
 exports.directory = function* (dirname, parentURL, opts = {}) {
+  if (hasOpaquePath(parentURL)) return UNRESOLVED
+
   let directoryURL
 
   if (dirname[dirname.length - 1] === '/' || dirname[dirname.length - 1] === '\\') {
@@ -806,6 +820,11 @@ exports.directory = function* (dirname, parentURL, opts = {}) {
   }
 
   return yield* exports.file('index', directoryURL, true, opts)
+}
+
+// https://url.spec.whatwg.org/#url-opaque-path
+function hasOpaquePath(url) {
+  return url.pathname[0] !== '/'
 }
 
 // https://infra.spec.whatwg.org/#ascii-upper-alpha
