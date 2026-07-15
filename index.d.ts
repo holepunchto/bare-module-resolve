@@ -32,6 +32,18 @@ interface ResolveOptions {
   resolutions?: ResolutionsMap
 }
 
+/**
+ * Resolve `specifier` relative to `parentURL`, which must be a WHATWG `URL` instance. `readPackage` is called with a `URL` instance for every package manifest to be read and must either return the parsed JSON package manifest, if it exists, or `null`. If `readPackage` returns a promise, synchronous iteration is not supported.
+ * @param specifier - The module specifier to resolve, relative to `parentURL`.
+ * @param parentURL - The WHATWG `URL` that `specifier` is resolved against.
+ * @param readPackage - Called with the `URL` of each package manifest to read; must return the parsed JSON manifest if it exists, or `null`. Returning a promise disables synchronous iteration.
+ * @returns Yields each candidate resolution `URL` in the order the algorithm tries them, for the caller to test (e.g. check it exists); if none resolve, iteration simply ends without yielding further values — it does not throw or return `null` for an unresolved specifier.
+ * @throws {INVALID_MODULE_SPECIFIER} the specifier (or a `node:`-protocol target) is not a valid module or package specifier: empty, a scoped package name missing the `/`, invalid characters, a relative-style `node:` specifier, an unmatched internal `#import` specifier, or a `file:` path containing an encoded `/` or `\`.
+ * @throws {INVALID_PACKAGE_TARGET} a string target in a package's `"exports"` (or non-internal `"imports"`) map does not start with `./`.
+ * @throws {PACKAGE_PATH_NOT_EXPORTED} the requested subpath is not defined by the package's `"exports"` map.
+ * @throws {PACKAGE_IMPORT_NOT_DEFINED} an internal `#specifier` is not defined by the package's `"imports"` map.
+ * @throws {UNSUPPORTED_ENGINE} the package's `"engines"` requirement is not satisfied by the corresponding `opts.engines` entry.
+ */
 declare function resolve(
   specifier: string,
   parentURL: URL,
