@@ -1617,11 +1617,9 @@ test('node: protocol with cyclic imports map', (t) => {
 test('relative specifier from data: URL', (t) => {
   const result = []
 
-  for (const resolution of resolve(
-    './e',
-    new URL('data:text/javascript,export default 42'),
-    { extensions: ['.js'] }
-  )) {
+  for (const resolution of resolve('./e', new URL('data:text/javascript,export default 42'), {
+    extensions: ['.js']
+  })) {
     result.push(resolution.href)
   }
 
@@ -1631,11 +1629,9 @@ test('relative specifier from data: URL', (t) => {
 test('bare specifier from data: URL', (t) => {
   const result = []
 
-  for (const resolution of resolve(
-    'd',
-    new URL('data:text/javascript,export default 42'),
-    { extensions: ['.js'] }
-  )) {
+  for (const resolution of resolve('d', new URL('data:text/javascript,export default 42'), {
+    extensions: ['.js']
+  })) {
     result.push(resolution.href)
   }
 
@@ -1645,11 +1641,10 @@ test('bare specifier from data: URL', (t) => {
 test('bare specifier with builtin from data: URL', (t) => {
   const result = []
 
-  for (const resolution of resolve(
-    'd',
-    new URL('data:text/javascript,export default 42'),
-    { extensions: ['.js'], builtins: ['d'] }
-  )) {
+  for (const resolution of resolve('d', new URL('data:text/javascript,export default 42'), {
+    extensions: ['.js'],
+    builtins: ['d']
+  })) {
     result.push(resolution.href)
   }
 
@@ -1673,11 +1668,10 @@ test('absolute specifier from data: URL', (t) => {
 test('imports map with relative target from data: URL', (t) => {
   const result = []
 
-  for (const resolution of resolve(
-    'd',
-    new URL('data:text/javascript,export default 42'),
-    { extensions: ['.js'], imports: { d: './e.js' } }
-  )) {
+  for (const resolution of resolve('d', new URL('data:text/javascript,export default 42'), {
+    extensions: ['.js'],
+    imports: { d: './e.js' }
+  })) {
     result.push(resolution.href)
   }
 
