@@ -1,6 +1,8 @@
 const test = require('brittle')
 const resolve = require('.')
 
+const { CYCLIC } = resolve.constants
+
 test('bare specifier', (t) => {
   function readPackage(url) {
     if (url.href === 'file:///a/b/node_modules/d/package.json') {
@@ -341,6 +343,30 @@ test('bare specifier with versioned builtin', (t) => {
   t.alike(result, ['builtin:d@1.2.3'])
 })
 
+test('bare specifier with scoped builtin', (t) => {
+  const result = []
+
+  for (const resolution of resolve('@s/d', new URL('file:///a/b/c'), {
+    builtins: ['@s/d']
+  })) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['builtin:@s/d'])
+})
+
+test('bare specifier with scoped versioned builtin', (t) => {
+  const result = []
+
+  for (const resolution of resolve('@s/d', new URL('file:///a/b/c'), {
+    builtins: ['@s/d@1.2.3']
+  })) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['builtin:@s/d@1.2.3'])
+})
+
 test('bare specifier with conditional builtin', (t) => {
   let result = []
 
@@ -360,6 +386,36 @@ test('bare specifier with conditional builtin', (t) => {
     conditions: ['import']
   })) {
     result.push(resolution.href)
+  }
+
+  t.alike(result, [])
+})
+
+test('builtin target with matching version', (t) => {
+  const result = []
+
+  for (const value of resolve.builtinTarget('d', '1.2.3', 'd')) {
+    result.push(value.resolution.href)
+  }
+
+  t.alike(result, ['builtin:d@1.2.3'])
+})
+
+test('builtin target with matching versioned target', (t) => {
+  const result = []
+
+  for (const value of resolve.builtinTarget('d', '1.2.3', 'd@1.2.3')) {
+    result.push(value.resolution.href)
+  }
+
+  t.alike(result, ['builtin:d@1.2.3'])
+})
+
+test('builtin target with mismatching version', (t) => {
+  const result = []
+
+  for (const value of resolve.builtinTarget('d', '1.2.3', 'd@4.5.6')) {
+    result.push(value.resolution.href)
   }
 
   t.alike(result, [])
@@ -651,6 +707,32 @@ test('package.json#main with self reference and name mismatch', (t) => {
   t.alike(result, [])
 })
 
+test('package.json#main with self reference through directory', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/d/package.json') {
+      return {
+        name: 'd',
+        main: 'e/'
+      }
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve(
+    'd',
+    new URL('file:///a/b/d/'),
+    { extensions: ['.js'] },
+    readPackage
+  )) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/d/e/index.js'])
+})
+
 test('package.json#exports with expansion key', (t) => {
   function readPackage(url) {
     if (url.href === 'file:///a/b/node_modules/d/package.json') {
@@ -720,6 +802,39 @@ test('package.json#exports with multiple expansion key candidates', (t) => {
   }
 
   t.alike(result, ['file:///a/b/node_modules/d/i/g.js'])
+})
+
+test('package.json#exports with expansion key shorter than match', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        exports: {
+          './a*bc': './x/*.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  try {
+    for (const resolution of resolve('d/abc', new URL('file:///a/b/c'), readPackage)) {
+      t.absent(resolution)
+    }
+
+    t.fail()
+  } catch (err) {
+    t.comment(err.message)
+    t.is(err.code, 'PACKAGE_PATH_NOT_EXPORTED')
+  }
+
+  const result = []
+
+  for (const resolution of resolve('d/axybc', new URL('file:///a/b/c'), readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/x/xy.js'])
 })
 
 test('package.json#exports with conditions', (t) => {
@@ -1049,6 +1164,54 @@ test('package.json#exports with unexported subpath', (t) => {
   }
 })
 
+test('package.json#exports with only subpaths', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        exports: {
+          './f': './f.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  try {
+    for (const resolution of resolve('d', new URL('file:///a/b/c'), readPackage)) {
+      t.absent(resolution)
+    }
+
+    t.fail()
+  } catch (err) {
+    t.comment(err.message)
+    t.is(err.code, 'PACKAGE_PATH_NOT_EXPORTED')
+  }
+})
+
+test('package.json#exports with keyed main', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        exports: {
+          '.': './e.js',
+          './f': './f.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c'), readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/e.js'])
+})
+
 test('package.json#exports with invalid target', (t) => {
   function readPackage(url) {
     if (url.href === 'file:///a/b/node_modules/d/package.json') {
@@ -1072,6 +1235,32 @@ test('package.json#exports with invalid target', (t) => {
   } catch (err) {
     t.comment(err.message)
     t.ok(err)
+  }
+})
+
+test('package.json#exports with invalid target and code', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        exports: {
+          '.': 'e.js',
+          './f': 'f.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  try {
+    for (const resolution of resolve('d', new URL('file:///a/b/c'), readPackage)) {
+      t.absent(resolution)
+    }
+
+    t.fail()
+  } catch (err) {
+    t.comment(err.message)
+    t.is(err.code, 'INVALID_PACKAGE_TARGET')
   }
 })
 
@@ -1189,6 +1378,31 @@ test('package.json#imports with private key and no match', (t) => {
   } catch (err) {
     t.comment(err.message)
     t.ok(err)
+  }
+})
+
+test('package.json#imports with private key and no match and code', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/d/package.json') {
+      return {
+        imports: {
+          '#e': './e.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  try {
+    for (const resolution of resolve('#f', new URL('file:///a/b/d/'), readPackage)) {
+      t.absent(resolution)
+    }
+
+    t.fail()
+  } catch (err) {
+    t.comment(err.message)
+    t.is(err.code, 'PACKAGE_IMPORT_NOT_DEFINED')
   }
 })
 
@@ -1355,6 +1569,19 @@ test('empty specifier', (t) => {
   }
 })
 
+test('empty specifier with code', (t) => {
+  try {
+    for (const resolution of resolve('', new URL('file:///a/b/c'))) {
+      t.absent(resolution)
+    }
+
+    t.fail()
+  } catch (err) {
+    t.comment(err.message)
+    t.is(err.code, 'INVALID_MODULE_SPECIFIER')
+  }
+})
+
 test('async package reads', async (t) => {
   async function readPackage(url) {
     if (url.href === 'file:///a/b/node_modules/d/package.json') {
@@ -1434,6 +1661,32 @@ test('imports override with package.json#imports', (t) => {
   }
 
   t.alike(result, ['file:///a/b/c/f.js'])
+})
+
+test('imports override with package.json#imports fallthrough', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/c/package.json') {
+      return {
+        imports: {
+          f: './g.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  const imports = {
+    d: './e.js'
+  }
+
+  const result = []
+
+  for (const resolution of resolve('d', new URL('file:///a/b/c/'), { imports }, readPackage)) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/c/e.js'])
 })
 
 test('scoped package.json inside package', (t) => {
@@ -1581,6 +1834,20 @@ test('resolve cyclic deferred bare specifier with resolutions map', (t) => {
   t.alike(result, ['file:///a/b/node_modules/d/index.js'])
 })
 
+test('imports override with cyclic target', (t) => {
+  const iterator = resolve('d', new URL('file:///a/b/c'), {
+    imports: { d: 'deferred:d' }
+  })[Symbol.iterator]()
+
+  let next = iterator.next()
+
+  while (next.done !== true) {
+    next = iterator.next()
+  }
+
+  t.is(next.value, CYCLIC)
+})
+
 test('node: protocol', (t) => {
   function readPackage(url) {
     if (url.href === 'file:///a/b/node_modules/d/package.json') {
@@ -1613,6 +1880,45 @@ test('node: protocol without match', (t) => {
 
 test('node: protocol with invalid package name', (t) => {
   t.exception(() => [...resolve('node:/d/', new URL('file:///a/b/c'))])
+})
+
+test('node: protocol with current directory', (t) => {
+  try {
+    for (const resolution of resolve('node:.', new URL('file:///a/b/c'))) {
+      t.absent(resolution)
+    }
+
+    t.fail()
+  } catch (err) {
+    t.comment(err.message)
+    t.is(err.code, 'INVALID_MODULE_SPECIFIER')
+  }
+})
+
+test('node: protocol with parent directory', (t) => {
+  try {
+    for (const resolution of resolve('node:..', new URL('file:///a/b/c'))) {
+      t.absent(resolution)
+    }
+
+    t.fail()
+  } catch (err) {
+    t.comment(err.message)
+    t.is(err.code, 'INVALID_MODULE_SPECIFIER')
+  }
+})
+
+test('node: protocol with relative path', (t) => {
+  try {
+    for (const resolution of resolve('node:./d', new URL('file:///a/b/c'))) {
+      t.absent(resolution)
+    }
+
+    t.fail()
+  } catch (err) {
+    t.comment(err.message)
+    t.is(err.code, 'INVALID_MODULE_SPECIFIER')
+  }
 })
 
 test('node: protocol with cyclic imports map', (t) => {
@@ -1771,6 +2077,36 @@ test('engines with invalid range', (t) => {
   }
 })
 
+test('engines with invalid range and code', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        engines: {
+          foo: '>=1.2.3'
+        }
+      }
+    }
+
+    return null
+  }
+
+  try {
+    for (const resolution of resolve(
+      'd',
+      new URL('file:///a/b/c'),
+      { extensions: ['.js'], engines: { foo: '1.2.2' } },
+      readPackage
+    )) {
+      t.absent(resolution)
+    }
+
+    t.fail()
+  } catch (err) {
+    t.comment(err.message)
+    t.is(err.code, 'UNSUPPORTED_ENGINE')
+  }
+})
+
 test('package scope lookup with resolutions map', (t) => {
   const resolutions = {
     'file:///a/b/c': {
@@ -1807,4 +2143,42 @@ test('package scope lookup with root non-file: URL', (t) => {
   }
 
   t.alike(result, ['drive:///package.json'])
+})
+
+test('package scope lookup with Windows drive letter', (t) => {
+  const result = []
+
+  for (const scope of resolve.lookupPackageScope(new URL('file:///c:/a/b'))) {
+    result.push(scope.href)
+  }
+
+  t.alike(result, ['file:///c:/a/package.json', 'file:///c:/package.json'])
+})
+
+test('package scope lookup with node_modules boundary', (t) => {
+  const result = []
+
+  for (const scope of resolve.lookupPackageScope(new URL('file:///a/node_modules'))) {
+    result.push(scope.href)
+  }
+
+  t.alike(result, [])
+})
+
+test('package root lookup with Windows drive letter', (t) => {
+  const result = []
+
+  for (const url of resolve.lookupPackageRoot('d', new URL('file:///c:/a/b'))) {
+    result.push(url.href)
+  }
+
+  t.alike(result, [
+    'file:///c:/a/node_modules/d/package.json',
+    'file:///c:/node_modules/d/package.json'
+  ])
+})
+
+test('pattern key compare with wildcard and non-wildcard key', (t) => {
+  t.is(resolve.patternKeyCompare('ab', 'a*'), 1)
+  t.is(resolve.patternKeyCompare('a*', 'ab'), -1)
 })
