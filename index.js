@@ -328,6 +328,22 @@ exports.packageSelf = function* (packageName, packageSubpath, parentURL, opts = 
 }
 
 exports.packageExports = function* (packageURL, subpath, packageExports, opts = {}) {
+  if (
+    typeof packageExports === 'object' &&
+    packageExports !== null &&
+    !Array.isArray(packageExports)
+  ) {
+    const keys = Object.keys(packageExports)
+
+    const relative = keys.filter((key) => key.startsWith('.')).length
+
+    if (relative !== 0 && relative !== keys.length) {
+      throw errors.INVALID_PACKAGE_CONFIGURATION(
+        `"exports" in '${packageURL}' cannot contain some keys starting with '.' and some not`
+      )
+    }
+  }
+
   if (subpath === '.') {
     let mainExport
 

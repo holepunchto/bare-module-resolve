@@ -1075,6 +1075,32 @@ test('package.json#exports with invalid target', (t) => {
   }
 })
 
+test('package.json#exports with mixed keys', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {
+        exports: {
+          '.': './e.js',
+          import: './f.js'
+        }
+      }
+    }
+
+    return null
+  }
+
+  try {
+    for (const resolution of resolve('d', new URL('file:///a/b/c'), readPackage)) {
+      t.absent(resolution)
+    }
+
+    t.fail()
+  } catch (err) {
+    t.comment(err.message)
+    t.is(err.code, 'INVALID_PACKAGE_CONFIGURATION')
+  }
+})
+
 test('package.json#imports with expansion key', (t) => {
   function readPackage(url) {
     if (url.href === 'file:///a/b/d/package.json') {
