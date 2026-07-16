@@ -286,11 +286,13 @@ Options are the same as `resolve()` for all functions.
     1.  If `target` does not start with `./` and `isImports` is `false`, throw.
     2.  If `patternMatch` is not `null`:
         1.  Replace every instance of `*` in `target` with `patternMatch`.
-    3.  If `target` forms a cycle with a previous `target` in the same resolution chain, return.
-    4.  If `url(target, packageURL, options)` yields, return.
-    5.  If `target` equals `.` or `..`, or if `target` starts with `/`, `./`, or `../`:
-        1.  Yield the resolution of `target` relative to `packageURL` and return.
-    6.  Return `package(target, packageURL, options)`.
+    3.  If `options.matchedTargets` includes `target`, return, having detected a resolution cycle.
+    4.  Append `target` to `options.matchedTargets` for the remainder of these steps, removing it again before returning.
+    5.  If `url(target, packageURL, options)` yields, return.
+    6.  If `target` equals `.` or `..`, or if `target` starts with `/`, `./`, or `../`:
+        1.  If `packageURL` has an opaque path, return.
+        2.  Yield the resolution of `target` relative to `packageURL` and return.
+    7.  Return `package(target, packageURL, options)`.
 2.  If `target` is an array:
     1.  For each value `targetValue` of `target`:
         1.  If `packageTarget(packageURL, targetValue, patternMatch, isImports, options)` resolves, return.
@@ -298,7 +300,10 @@ Options are the same as `resolve()` for all functions.
     1.  For each key `condition` of `target`:
         1.  If `condition` equals `default` or if `options.conditions` includes `condition`:
             1.  Let `targetValue` be `target[condition]`.
-            2.  Return `packageTarget(packageURL, targetValue, patternMatch, isImports, options)`.
+            2.  Append `condition` to `options.matchedConditions`.
+            3.  Let `status` be the result of `packageTarget(packageURL, targetValue, patternMatch, isImports, options)`.
+            4.  Remove `condition` from `options.matchedConditions`.
+            5.  Return `status`.
 
 #### `const generator = resolve.builtinTarget(packageSpecifier, packageVersion, target[, options])`
 
@@ -324,33 +329,38 @@ Options are the same as `resolve()` for all functions.
     1.  For each key `condition` of `target`:
         1.  If `condition` equals `default` or if `options.conditions` includes `condition`:
             1.  Let `targetValue` be `target[condition]`.
-            2.  Return `builtinTarget(packageSpecifier, packageVersion, targetValue, options)`.
+            2.  Append `condition` to `options.matchedConditions`.
+            3.  Let `status` be the result of `builtinTarget(packageSpecifier, packageVersion, targetValue, options)`.
+            4.  Remove `condition` from `options.matchedConditions`.
+            5.  Return `status`.
 
 #### `const generator = resolve.file(filename, parentURL, isIndex[, options])`
 
 1.  If `filename` equals `.` or `..`, or if `filename` ends with `/` or `\`, return.
-2.  If `parentURL` is a `file:` URL and `filename` includes encoded `/` or `\`, throw.
-3.  If `isIndex` is `false`:
+2.  If `parentURL` has an opaque path, return.
+3.  If `parentURL` is a `file:` URL and `filename` includes encoded `/` or `\`, throw.
+4.  If `isIndex` is `false`:
     1.  Yield the resolution of `filename` relative to `parentURL`.
-4.  For each value `ext` of `options.extensions`:
+5.  For each value `ext` of `options.extensions`:
     1.  If `filename` ends with `ext`, continue.
     2.  Yield the resolution of `filename` concatenated with `ext` relative to `parentURL`.
 
 #### `const generator = resolve.directory(dirname, parentURL[, options])`
 
-1.  Let `directoryURL` be `undefined`.
-2.  If `dirname` ends with `/` or `\`:
+1.  If `parentURL` has an opaque path, return.
+2.  Let `directoryURL` be `undefined`.
+3.  If `dirname` ends with `/` or `\`:
     1.  Set `directoryURL` to the resolution of `dirname` relative to `parentURL`.
-3.  Otherwise:
+4.  Otherwise:
     1.  Set `directoryURL` to the resolution of `dirname` concatenated with `/` relative to `parentURL`.
-4.  Let `info` be the result of yielding the resolution of `package.json` relative to `directoryURL`.
-5.  If `info` is not `null`:
+5.  Let `info` be the result of yielding the resolution of `package.json` relative to `directoryURL`.
+6.  If `info` is not `null`:
     1.  If `info.exports` is set:
         1.  Return `packageExports(directoryURL, '.', info.exports, options)`.
     2.  If `info.main` is a non-empty string:
         1.  If `file(info.main, directoryURL, false, options)` resolves, return.
         2.  Return `directory(info.main, directoryURL, options)`.
-6.  Return `file('index', directoryURL, true, options)`.
+7.  Return `file('index', directoryURL, true, options)`.
 
 ## License
 
