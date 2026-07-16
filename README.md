@@ -234,7 +234,8 @@ Options are the same as `resolve()` for all functions.
 
 #### `const generator = resolve.packageExports(packageURL, subpath, exports[, options])`
 
-1.  If `subpath` is `.`:
+1.  If `exports` is a non-`null`, non-array object whose keys are a mix of ones that start with `.` and ones that don't, throw.
+2.  If `subpath` is `.`:
     1.  Let `mainExport` be `undefined`.
     2.  If `exports` is a string or an array:
         1.  Set `mainExport` to `exports`.
@@ -246,10 +247,10 @@ Options are the same as `resolve()` for all functions.
             1.  Set `mainExport` to `exports`.
     4.  If `mainExport` is not `undefined`:
         1.  If `packageTarget(packageURL, mainExport, null, false, options)` yields, return.
-2.  Otherwise, if `exports` is a non-`null` object:
+3.  Otherwise, if `exports` is a non-`null` object:
     1.  If every key of `exports` starts with `.`:
         1.  If `packageImportsExports(subpath, exports, packageURL, false, options)` yields, return.
-3.  Throw.
+4.  Throw.
 
 #### `const generator = resolve.packageImports(specifier, parentURL[, options])`
 
