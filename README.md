@@ -37,6 +37,7 @@ for await (const resolution of resolve('./file.js', new URL('file:///directory/'
 ```
 
 <!-- bare-refgen:api start -->
+
 ## API
 
 ### Functions
@@ -53,11 +54,11 @@ Resolve `specifier` relative to `parentURL`, which must be a WHATWG `URL` instan
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `specifier` | `string` | — | The module specifier to resolve, relative to `parentURL`. |
-| `parentURL` | `URL` | — | The WHATWG `URL` that `specifier` is resolved against. |
-| `readPackage?` | `(url: URL) => JSON \| null` | — | Called with the `URL` of each package manifest to read; must return the parsed JSON manifest if it exists, or `null`. Returning a promise disables synchronous iteration. |
+| Parameter      | Type                         | Default | Description                                                                                                                                                               |
+| -------------- | ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `specifier`    | `string`                     | —       | The module specifier to resolve, relative to `parentURL`.                                                                                                                 |
+| `parentURL`    | `URL`                        | —       | The WHATWG `URL` that `specifier` is resolved against.                                                                                                                    |
+| `readPackage?` | `(url: URL) => JSON \| null` | —       | Called with the `URL` of each package manifest to read; must return the parsed JSON manifest if it exists, or `null`. Returning a promise disables synchronous iteration. |
 
 **Returns** `Iterable<URL>` — Yields each candidate resolution `URL` in the order the algorithm tries them, for the caller to test (e.g. check it exists); if none resolve, iteration simply ends without yielding further values — it does not throw or return `null` for an unresolved specifier.
 
@@ -104,9 +105,9 @@ interface ResolveOptions {
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `msg` | `string` | — | The error message. |
+| Parameter | Type     | Default | Description        |
+| --------- | -------- | ------- | ------------------ |
+| `msg`     | `string` | —       | The error message. |
 
 **Returns** `ModuleResolveError` — A new `ModuleResolveError` with code `INVALID_MODULE_SPECIFIER`.
 
@@ -116,9 +117,9 @@ interface ResolveOptions {
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `msg` | `string` | — | The error message. |
+| Parameter | Type     | Default | Description        |
+| --------- | -------- | ------- | ------------------ |
+| `msg`     | `string` | —       | The error message. |
 
 **Returns** `ModuleResolveError` — A new `ModuleResolveError` with code `INVALID_PACKAGE_TARGET`.
 
@@ -128,9 +129,9 @@ interface ResolveOptions {
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `msg` | `string` | — | The error message. |
+| Parameter | Type     | Default | Description        |
+| --------- | -------- | ------- | ------------------ |
+| `msg`     | `string` | —       | The error message. |
 
 **Returns** `ModuleResolveError` — A new `ModuleResolveError` with code `PACKAGE_IMPORT_NOT_DEFINED`.
 
@@ -140,9 +141,9 @@ interface ResolveOptions {
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `msg` | `string` | — | The error message. |
+| Parameter | Type     | Default | Description        |
+| --------- | -------- | ------- | ------------------ |
+| `msg`     | `string` | —       | The error message. |
 
 **Returns** `ModuleResolveError` — A new `ModuleResolveError` with code `PACKAGE_PATH_NOT_EXPORTED`.
 
@@ -152,11 +153,12 @@ interface ResolveOptions {
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `msg` | `string` | — | The error message. |
+| Parameter | Type     | Default | Description        |
+| --------- | -------- | ------- | ------------------ |
+| `msg`     | `string` | —       | The error message. |
 
 **Returns** `ModuleResolveError` — A new `ModuleResolveError` with code `UNSUPPORTED_ENGINE`.
+
 <!-- bare-refgen:api end -->
 
 ## License
