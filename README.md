@@ -38,9 +38,7 @@ for await (const resolution of resolve('./file.js', new URL('file:///directory/'
 
 ## API
 
-See the [`bare-module-resolve` reference][reference].
-
-[reference]: https://docs.pears.com/reference/bare/modules/bare-module-resolve
+See the [`bare-module-resolve` reference](https://docs.pears.com/reference/bare/modules/bare-module-resolve).
 
 ## License
 
