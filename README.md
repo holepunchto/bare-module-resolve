@@ -38,56 +38,9 @@ for await (const resolution of resolve('./file.js', new URL('file:///directory/'
 
 ## API
 
-#### `const resolver = resolve(specifier, parentURL[, options][, readPackage])`
+See the [`bare-module-resolve` reference](https://docs.pears.com/reference/bare/modules/bare-module-resolve).
 
-Resolve `specifier` relative to `parentURL`, which must be a WHATWG `URL` instance. `readPackage` is called with a `URL` instance for every package manifest to be read and must either return the parsed JSON package manifest, if it exists, or `null`. If `readPackage` returns a promise, synchronous iteration is not supported.
-
-Options include:
-
-```js
-options = {
-  // A default "imports" map to apply to all specifiers. Follows the same
-  // syntax and rules as the "imports" property defined in `package.json`.
-  imports,
-  // A list of builtin module specifiers. If matched, the protocol of the
-  // resolved URL will be `builtinProtocol`.
-  builtins: [],
-  // The protocol to use for resolved builtin module specifiers.
-  builtinProtocol: 'builtin:',
-  // A list of module specifiers whose resolution should be deferred. If matched,
-  // the protocol of the resolved URL will be `deferredProtocol`.
-  defer: [],
-  // The protocol to use for resolved deferred module specifiers.
-  deferredProtocol: 'deferred:',
-  // The supported import conditions. "default" is always recognized.
-  conditions: [],
-  // An array reference which will contain the matched conditions when yielding
-  // resolutions.
-  matchedConditions: [],
-  // An array reference which will contain the matched targets when yielding
-  // remapped specifiers., such as those from resolution or import maps.
-  matchedTargets: [],
-  // The supported engine versions.
-  engines: {},
-  // The file extensions to look for. Must be provided to support extensionless
-  // specifier resolution and directory support, such as resolving './foo' to
-  // './foo.js' or './foo/index.js'.
-  extensions: [],
-  // A map of preresolved imports with keys being serialized parent URLs and
-  // values being "imports" maps.
-  resolutions
-}
-```
-
-#### `for (const resolution of resolver)`
-
-Synchronously iterate the module resolution candidates. The resolved module is the first candidate that exists, either as a file on a file system, a resource at a URL, or something else entirely.
-
-#### `for await (const resolution of resolver)`
-
-Asynchronously iterate the module resolution candidates. If `readPackage` returns promises, these will be awaited. The same comments as `for (const resolution of resolver)` apply.
-
-### Algorithm
+## Algorithm
 
 The following generator functions implement the resolution algorithm, which has been adapted from the Node.js resolution algorithms for CommonJS and ES modules. Unlike Node.js, Bare uses the same resolution algorithm for both module formats. The yielded values have the following shape:
 
@@ -142,7 +95,7 @@ Options are the same as `resolve()` for all functions.
 > [!WARNING]
 > These functions are currently subject to change between minor releases. If using them directly, make sure to specify a tilde range (`~1.2.3`) when declaring the module dependency.
 
-#### `const generator = resolve.module(specifier, parentURL[, options])`
+### `const generator = resolve.module(specifier, parentURL[, options])`
 
 1.  If `specifier` [starts with a Windows drive letter](https://url.spec.whatwg.org/#start-with-a-windows-drive-letter):
     1.  Prepend `/` to `specifier`.
@@ -158,7 +111,7 @@ Options are the same as `resolve()` for all functions.
     4.  Return `directory(specifier, parentURL, options)`.
 6.  Return `package(specifier, parentURL, options)`.
 
-#### `const generator = resolve.url(url, parentURL[, options])`
+### `const generator = resolve.url(url, parentURL[, options])`
 
 1.  If `url` is not a valid URL, return.
 2.  If `options.imports` is set:
@@ -176,18 +129,18 @@ Options are the same as `resolve()` for all functions.
     3.  Return `package(specifier, parentURL, options)`.
 5.  Yield `url`.
 
-#### `const generator = resolve.preresolved(specifier, resolutions, parentURL[, options])`
+### `const generator = resolve.preresolved(specifier, resolutions, parentURL[, options])`
 
 1.  Let `imports` be `resolutions[parentURL]`.
 2.  If `imports` is a non-`null` object:
     1.  Return `packageImportsExports(specifier, imports, parentURL, true, options)`.
 
-#### `const generator = resolve.deferred(specifier[, options])`
+### `const generator = resolve.deferred(specifier[, options])`
 
 1.  If `options.defer` includes `specifier`:
     1.  Yield `options.deferredProtocol` concatenated with `specifier` and return.
 
-#### `const generator = resolve.package(packageSpecifier, parentURL[, options])`
+### `const generator = resolve.package(packageSpecifier, parentURL[, options])`
 
 1.  If `packageSpecifier` is the empty string, throw.
 2.  If `packageSpecifier` does not start with `@`:
@@ -216,7 +169,7 @@ Options are the same as `resolve()` for all functions.
         4.  If `file(packageSubpath, packageURL, false, options)` resolves, return.
         5.  Return `directory(packageSubpath, packageURL, options)`.
 
-#### `const generator = resolve.packageSelf(packageName, packageSubpath, parentURL[, options])`
+### `const generator = resolve.packageSelf(packageName, packageSubpath, parentURL[, options])`
 
 1.  For each value `packageURL` of `lookupPackageScope(parentURL, options)`:
     1.  Let `info` be the result of yielding `packageURL`.
@@ -232,7 +185,7 @@ Options are the same as `resolve()` for all functions.
         4.  If `file(packageSubpath, packageURL, false, options)` resolves, return.
         5.  Return `directory(packageSubpath, packageURL, options)`.
 
-#### `const generator = resolve.packageExports(packageURL, subpath, exports[, options])`
+### `const generator = resolve.packageExports(packageURL, subpath, exports[, options])`
 
 1.  If `exports` is a non-`null`, non-array object whose keys are a mix of ones that start with `.` and ones that don't, throw.
 2.  If `subpath` is `.`:
@@ -252,7 +205,7 @@ Options are the same as `resolve()` for all functions.
         1.  If `packageImportsExports(subpath, exports, packageURL, false, options)` yields, return.
 4.  Throw.
 
-#### `const generator = resolve.packageImports(specifier, parentURL[, options])`
+### `const generator = resolve.packageImports(specifier, parentURL[, options])`
 
 1.  If `specifier` is `#` or starts with `#/`, throw.
 2.  For each value `packageURL` of `lookupPackageScope(parentURL, options)`:
@@ -265,7 +218,7 @@ Options are the same as `resolve()` for all functions.
 3.  If `options.imports` is set:
     1.  If `packageImportsExports(url.href, options.imports, parentURL, true, options)` yields, return.
 
-#### `const generator = resolve.packageImportsExports(matchKey, matchObject, packageURL, isImports[, options])`
+### `const generator = resolve.packageImportsExports(matchKey, matchObject, packageURL, isImports[, options])`
 
 1.  If `matchKey` is a key of `matchObject` and `matchKey` does not include `*`:
     1.  Let `target` be `matchObject[matchKey]`.
@@ -280,7 +233,7 @@ Options are the same as `resolve()` for all functions.
             2.  Let `patternMatch` be the substring of `matchKey` from the position at the length of `patternBase` until the length of `matchKey` minus the length of `patternTrailer`.
             3.  Return `packageTarget(packageURL, target, patternMatch, isImports, options)`.
 
-#### `const generator = resolve.packageTarget(packageURL, target, patternMatch, isImports[, options])`
+### `const generator = resolve.packageTarget(packageURL, target, patternMatch, isImports[, options])`
 
 1.  If `target` is a string:
     1.  If `target` does not start with `./` and `isImports` is `false`, throw.
@@ -305,7 +258,7 @@ Options are the same as `resolve()` for all functions.
             4.  Remove `condition` from `options.matchedConditions`.
             5.  Return `status`.
 
-#### `const generator = resolve.builtinTarget(packageSpecifier, packageVersion, target[, options])`
+### `const generator = resolve.builtinTarget(packageSpecifier, packageVersion, target[, options])`
 
 1.  If `target` is a string:
     1.  If `target` does not start with `@`:
@@ -334,7 +287,7 @@ Options are the same as `resolve()` for all functions.
             4.  Remove `condition` from `options.matchedConditions`.
             5.  Return `status`.
 
-#### `const generator = resolve.file(filename, parentURL, isIndex[, options])`
+### `const generator = resolve.file(filename, parentURL, isIndex[, options])`
 
 1.  If `filename` equals `.` or `..`, or if `filename` ends with `/` or `\`, return.
 2.  If `parentURL` has an opaque path, return.
@@ -345,7 +298,7 @@ Options are the same as `resolve()` for all functions.
     1.  If `filename` ends with `ext`, continue.
     2.  Yield the resolution of `filename` concatenated with `ext` relative to `parentURL`.
 
-#### `const generator = resolve.directory(dirname, parentURL[, options])`
+### `const generator = resolve.directory(dirname, parentURL[, options])`
 
 1.  If `parentURL` has an opaque path, return.
 2.  Let `directoryURL` be `undefined`.
