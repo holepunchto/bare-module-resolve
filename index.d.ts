@@ -23,6 +23,7 @@ interface ResolveOptions {
   conditions?: Conditions
   defer?: string[]
   deferredProtocol?: string
+  directories?: boolean
   engines?: Engines
   extensions?: string[]
   imports?: ImportsMap

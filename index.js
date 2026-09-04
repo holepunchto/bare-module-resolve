@@ -803,6 +803,8 @@ exports.file = function* (filename, parentURL, isIndex, opts = {}) {
 }
 
 exports.directory = function* (dirname, parentURL, opts = {}) {
+  const { directories = false } = opts
+
   if (hasOpaquePath(parentURL)) return UNRESOLVED
 
   let directoryURL
@@ -813,11 +815,23 @@ exports.directory = function* (dirname, parentURL, opts = {}) {
     directoryURL = new URL(dirname + '/', parentURL)
   }
 
+  let yielded = false
+
+  if (directories) {
+    if (yield { resolution: directoryURL }) return RESOLVED
+
+    yielded = true
+  }
+
   const info = yield { package: new URL('package.json', directoryURL) }
 
   if (info) {
     if (info.exports) {
-      return yield* exports.packageExports(directoryURL, '.', info.exports, opts)
+      let status = yield* exports.packageExports(directoryURL, '.', info.exports, opts)
+
+      if (yielded) status |= YIELDED
+
+      return status
     }
 
     if (typeof info.main === 'string' && info.main !== '') {
@@ -825,7 +839,7 @@ exports.directory = function* (dirname, parentURL, opts = {}) {
 
       if (status === RESOLVED) return status
 
-      const yielded = (status & YIELDED) !== 0
+      if ((status & YIELDED) !== 0) yielded = true
 
       status = yield* exports.directory(info.main, directoryURL, opts)
 
@@ -835,7 +849,11 @@ exports.directory = function* (dirname, parentURL, opts = {}) {
     }
   }
 
-  return yield* exports.file('index', directoryURL, true, opts)
+  let status = yield* exports.file('index', directoryURL, true, opts)
+
+  if (yielded) status |= YIELDED
+
+  return status
 }
 
 // https://url.spec.whatwg.org/#url-opaque-path
