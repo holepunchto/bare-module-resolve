@@ -306,14 +306,16 @@ Options are the same as `resolve()` for all functions.
     1.  Set `directoryURL` to the resolution of `dirname` relative to `parentURL`.
 4.  Otherwise:
     1.  Set `directoryURL` to the resolution of `dirname` concatenated with `/` relative to `parentURL`.
-5.  Let `info` be the result of yielding the resolution of `package.json` relative to `directoryURL`.
-6.  If `info` is not `null`:
+5.  If `options.directories` is `true`:
+    1.  Yield `directoryURL`.
+6.  Let `info` be the result of yielding the resolution of `package.json` relative to `directoryURL`.
+7.  If `info` is not `null`:
     1.  If `info.exports` is set:
         1.  Return `packageExports(directoryURL, '.', info.exports, options)`.
     2.  If `info.main` is a non-empty string:
         1.  If `file(info.main, directoryURL, false, options)` resolves, return.
         2.  Return `directory(info.main, directoryURL, options)`.
-7.  Return `file('index', directoryURL, true, options)`.
+8.  Return `file('index', directoryURL, true, options)`.
 
 ## License
 

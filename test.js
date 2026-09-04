@@ -605,6 +605,122 @@ test('relative specifier, parent directory', (t) => {
   t.alike(result, ['file:///a/index.js'])
 })
 
+test('relative specifier with trailing slash, directories', (t) => {
+  const result = []
+
+  for (const resolution of resolve('./d/', new URL('file:///a/b/c'), {
+    extensions: ['.js'],
+    directories: true
+  })) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/d/', 'file:///a/b/d/index.js'])
+})
+
+test('relative specifier, current directory, directories', (t) => {
+  const result = []
+
+  for (const resolution of resolve('.', new URL('file:///a/b/c'), {
+    extensions: ['.js'],
+    directories: true
+  })) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/', 'file:///a/b/index.js'])
+})
+
+test('relative specifier, parent directory, directories', (t) => {
+  const result = []
+
+  for (const resolution of resolve('..', new URL('file:///a/b/c'), {
+    extensions: ['.js'],
+    directories: true
+  })) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/', 'file:///a/index.js'])
+})
+
+test('relative specifier, directories, no extensions', (t) => {
+  const result = []
+
+  for (const resolution of resolve('..', new URL('file:///a/b/c'), {
+    directories: true
+  })) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/'])
+})
+
+test('relative specifier, directories, package.json in directory', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/package.json') {
+      return { main: './d.js' }
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve(
+    '..',
+    new URL('file:///a/b/c'),
+    { extensions: ['.js'], directories: true },
+    readPackage
+  )) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/', 'file:///a/d.js', 'file:///a/d.js/', 'file:///a/d.js/index.js'])
+})
+
+test('relative specifier, directories, resolved directory ends resolution', (t) => {
+  const result = []
+
+  const generator = resolve('..', new URL('file:///a/b/c'), {
+    extensions: ['.js'],
+    directories: true
+  })[Symbol.iterator]()
+
+  let next = generator.next()
+
+  while (next.done !== true) {
+    result.push(next.value.href)
+
+    next = generator.next(true)
+  }
+
+  t.alike(result, ['file:///a/'])
+})
+
+test('bare specifier with trailing slash, directories', (t) => {
+  function readPackage(url) {
+    if (url.href === 'file:///a/b/node_modules/d/package.json') {
+      return {}
+    }
+
+    return null
+  }
+
+  const result = []
+
+  for (const resolution of resolve(
+    'd/',
+    new URL('file:///a/b/c'),
+    { extensions: ['.js'], directories: true },
+    readPackage
+  )) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, ['file:///a/b/node_modules/d/', 'file:///a/b/node_modules/d/index.js'])
+})
+
 test('absolute specifier', (t) => {
   const result = []
 
