@@ -1,6 +1,6 @@
 {
   "name": "bare-module-resolve",
-  "version": "1.12.5",
+  "version": "1.12.6",
   "description": "Low-level module resolution algorithm for Bare",
   "exports": {
     "./package": "./package.json",
