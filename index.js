@@ -524,7 +524,7 @@ exports.packageTarget = function* (packageURL, target, patternMatch, isImports, 
 
     let status = yield* exports.url(target, packageURL, opts)
 
-    if (status) {
+    if (status || URL.canParse(target)) {
       matchedTargets.pop()
 
       return status
