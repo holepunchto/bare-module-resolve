@@ -1950,6 +1950,39 @@ test('resolve cyclic deferred bare specifier with resolutions map', (t) => {
   t.alike(result, ['file:///a/b/node_modules/d/index.js'])
 })
 
+test('resolve missing deferred bare specifier with resolutions map', (t) => {
+  const asked = []
+
+  function readPackage(url) {
+    asked.push(url.href)
+
+    return null
+  }
+
+  const resolutions = {
+    'file:///a/b/c': {
+      d: 'deferred:d'
+    }
+  }
+
+  const result = []
+
+  for (const resolution of resolve(
+    'd',
+    new URL('file:///a/b/c'),
+    { extensions: ['.js'], resolutions },
+    readPackage
+  )) {
+    result.push(resolution.href)
+  }
+
+  t.alike(result, [])
+  t.absent(
+    asked.some((href) => href.includes('deferred:')),
+    'the deferred target is not looked up as a package'
+  )
+})
+
 test('imports override with cyclic target', (t) => {
   const iterator = resolve('d', new URL('file:///a/b/c'), {
     imports: { d: 'deferred:d' }
