@@ -241,7 +241,7 @@ Options are the same as `resolve()` for all functions.
         1.  Replace every instance of `*` in `target` with `patternMatch`.
     3.  If `options.matchedTargets` includes `target`, return, having detected a resolution cycle.
     4.  Append `target` to `options.matchedTargets` for the remainder of these steps, removing it again before returning.
-    5.  If `url(target, packageURL, options)` yields, return.
+    5.  If `url(target, packageURL, options)` yields, or if `target` is a valid URL, return.
     6.  If `target` equals `.` or `..`, or if `target` starts with `/`, `./`, or `../`:
         1.  If `packageURL` has an opaque path, return.
         2.  Yield the resolution of `target` relative to `packageURL` and return.
